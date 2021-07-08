@@ -1,4 +1,4 @@
-#include <Windows.h>
+ï»¿#include <Windows.h>
 #include <WinGDI.h>
 #include <ddraw.h>
 #include <Shlwapi.h>
@@ -16,7 +16,7 @@
 static HDC hDesktopDC = NULL;
 static HPALETTE hPalette = NULL;
 
-// ƒtƒHƒ“ƒgƒe[ƒuƒ‹
+// ãƒ•ã‚©ãƒ³ãƒˆãƒ†ãƒ¼ãƒ–ãƒ«
 const int nMaxFontTable = 32;
 typedef struct
 {
@@ -29,7 +29,7 @@ typedef struct
 } FONT_TABLE;
 static FONT_TABLE fontTable[nMaxFontTable];
 
-// ƒvƒŠƒZƒbƒgƒJƒ‰[ƒe[ƒuƒ‹
+// ãƒ—ãƒªã‚»ãƒƒãƒˆã‚«ãƒ©ãƒ¼ãƒ†ãƒ¼ãƒ–ãƒ«
 const int nMaxColorTable = 'Z' - 'A' + 1;
 typedef struct
 {
@@ -67,44 +67,45 @@ static COLOR_TABLE colorTable[nMaxColorTable] =
 	{   0,   0,   0 }, // Z
 };
 
-// ƒRƒCƒ“‰æ‘œ•\¦—p‚Ìƒƒ‚ƒŠƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
+// ã‚³ã‚¤ãƒ³ç”»åƒè¡¨ç¤ºç”¨ã®ãƒ¡ãƒ¢ãƒªãƒ‡ãƒã‚¤ã‚¹ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
 static HDC hDCCoin = NULL;
 
-// ƒRƒCƒ“‰æ‘œ‚Ìƒrƒbƒgƒ}ƒbƒvƒnƒ“ƒhƒ‹
+// ã‚³ã‚¤ãƒ³ç”»åƒã®ãƒ“ãƒƒãƒˆãƒãƒƒãƒ—ãƒãƒ³ãƒ‰ãƒ«
 static HBITMAP hBitmapCoin = NULL;
 
-// ƒRƒCƒ“‰æ‘œ“Ç‚İ‚İ‘O‚Ìƒrƒbƒgƒ}ƒbƒvƒnƒ“ƒhƒ‹‘Ş”ğæ
+// ã‚³ã‚¤ãƒ³ç”»åƒèª­ã¿è¾¼ã¿å‰ã®ãƒ“ãƒƒãƒˆãƒãƒƒãƒ—ãƒãƒ³ãƒ‰ãƒ«é€€é¿å…ˆ
 static HBITMAP hBitmapCoinPrev = NULL;
 
-// ƒRƒCƒ“‰æ‘œ‚Ìƒtƒ@ƒCƒ‹–¼
+// ã‚³ã‚¤ãƒ³ç”»åƒã®ãƒ•ã‚¡ã‚¤ãƒ«å
 static char szCoinFileName[MAX_PATH] = "Gfx\\Fonts\\Modern\\Additional\\coin.bmp";
 
-// ƒRƒCƒ“‰æ‘œ‚Ì•\¦ˆÊ’u’²®
+// ã‚³ã‚¤ãƒ³ç”»åƒã®è¡¨ç¤ºä½ç½®èª¿æ•´
 static int nCoinAdjustX = 0;
 static int nCoinAdjustY = 0;
 
-// ƒRƒCƒ“‰æ‘œ‚Ì‘å‚«‚³
+// ã‚³ã‚¤ãƒ³ç”»åƒã®å¤§ãã•
 static const int nCoinWidth = 12;
 static const int nCoinHeight = 12;
 
-// Å‘å•\¦‰Â”\s”
+// æœ€å¤§è¡¨ç¤ºå¯èƒ½è¡Œæ•°
 static int nMaxLines = 54;
 
-// ’PŒê“à‚ÌÅ‘å•\¦‰Â”\•¶š”
-static int nMaxWordChars = 24;
+// å˜èªå†…ã®æœ€å¤§è¡¨ç¤ºå¯èƒ½æ–‡å­—æ•°
+#define NMAXWORDCHARS_NUMBER 24
+static int nMaxWordChars =  NMAXWORDCHARS_NUMBER;
 
-// WINMM.DLL‚Ìƒ‚ƒWƒ…[ƒ‹ƒnƒ“ƒhƒ‹
+// WINMM.DLLã®ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ãƒãƒ³ãƒ‰ãƒ«
 static HMODULE hWinMmDll = NULL;
 
-// •¶š—ñˆ—ƒoƒbƒtƒ@
+// æ–‡å­—åˆ—å‡¦ç†ãƒãƒƒãƒ•ã‚¡
 #define STRING_BUFFER_SIZE 1024
 
-// ƒƒOo—Í—pƒtƒ@ƒCƒ‹ƒ|ƒCƒ“ƒ^
+// ãƒ­ã‚°å‡ºåŠ›ç”¨ãƒ•ã‚¡ã‚¤ãƒ«ãƒã‚¤ãƒ³ã‚¿
 #if _INMM_LOG_OUTPUT
 static FILE *fpLog = NULL;
 #endif
 
-// ŒöŠJŠÖ”
+// å…¬é–‹é–¢æ•°
 int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags);
 void WINAPI TextOutDC0(int x, int y, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS, int nMagicCode, DWORD dwColor, DWORD dwFlags);
 void WINAPI TextOutDC1(LPRECT lpRect, int x, int y, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS, int nMagicCode, DWORD dwColor, DWORD dwFlags);
@@ -112,7 +113,7 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString);
 int WINAPI strnlen0(LPCBYTE lpString, int nMax);
 
-// “à•”ŠÖ”
+// å†…éƒ¨é–¢æ•°
 static int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode);
 static void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC hDC, int nMagicCode, COLORREF color, DWORD dwFlags);
 static void ShowCoinImage(LPPOINT lpPoint, HDC hDC);
@@ -126,8 +127,13 @@ static void InitPalette();
 static void InitCoinImage();
 static void Terminate();
 static int ReadLine(char *p, char *buf, int len);
+//
+static void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringword);
+static void CharUtf32toUtf16(LPDWORD lpStringdw, LPWORD stringword);
+static int Utf8CharLength(LPCBYTE utf8headbyte);
+static bool Utf8Laterbytecheck(LPCBYTE utf8laterbyte);
 
-// winmm.dll‚ÌAPI“]‘——p
+// winmm.dllã®APIè»¢é€ç”¨
 typedef MCIERROR (WINAPI *LPFNMCISENDCOMMANDA)(MCIDEVICEID, UINT, DWORD, DWORD);
 typedef MMRESULT (WINAPI *LPFNTIMEBEGINPERIOD)(UINT);
 typedef MMRESULT (WINAPI *LPFNTIMEGETDEVCAPS)(LPTIMECAPS, UINT);
@@ -150,14 +156,14 @@ MMRESULT WINAPI _timeKillEvent(UINT uTimerID);
 MMRESULT WINAPI _timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK lpTimeProc, DWORD dwUser, UINT fuEvent);
 
 //
-// DLLƒƒCƒ“ŠÖ”
+// DLLãƒ¡ã‚¤ãƒ³é–¢æ•°
 //
-// ƒpƒ‰ƒ[ƒ^
-//   hInstDLL: DLL ƒ‚ƒWƒ…[ƒ‹‚Ìƒnƒ“ƒhƒ‹
-//   fdwReason: ŠÖ”‚ğŒÄ‚Ño‚·——R
-//   lpvReserved: —\–ñÏ‚İ
-// –ß‚è’l
-//   ˆ—‚ª¬Œ÷‚·‚ê‚ÎTRUE‚ğ•Ô‚·
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   hInstDLL: DLL ãƒ¢ã‚¸ãƒ¥ãƒ¼ãƒ«ã®ãƒãƒ³ãƒ‰ãƒ«
+//   fdwReason: é–¢æ•°ã‚’å‘¼ã³å‡ºã™ç†ç”±
+//   lpvReserved: äºˆç´„æ¸ˆã¿
+// æˆ»ã‚Šå€¤
+//   å‡¦ç†ãŒæˆåŠŸã™ã‚Œã°TRUEã‚’è¿”ã™
 //   
 BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
@@ -177,14 +183,14 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 }
 
 //
-// •¶š—ñ•‚ğæ“¾‚·‚é (ƒIƒŠƒWƒiƒ‹”ÅŒİŠ·)
+// æ–‡å­—åˆ—å¹…ã‚’å–å¾—ã™ã‚‹ (ã‚ªãƒªã‚¸ãƒŠãƒ«ç‰ˆäº’æ›)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpString		‘ÎÛ•¶š—ñ
-//   nMagicCode		ƒtƒHƒ“ƒgw’è—pƒ}ƒWƒbƒNƒR[ƒh
-//   dwFlags		ƒtƒ‰ƒO(1‚Å‘¾•¶š/2‚Å‰e•t‚«)
-// –ß‚è’l
-//   •¶š—ñ•
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   nMagicCode		ãƒ•ã‚©ãƒ³ãƒˆæŒ‡å®šç”¨ãƒã‚¸ãƒƒã‚¯ã‚³ãƒ¼ãƒ‰
+//   dwFlags		ãƒ•ãƒ©ã‚°(1ã§å¤ªæ–‡å­—/2ã§å½±ä»˜ã)
+// æˆ»ã‚Šå€¤
+//   æ–‡å­—åˆ—å¹…
 //
 int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 {
@@ -217,11 +223,11 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 	{
 		switch (*s)
 		{
-		case 0x81:
-			// ˜
-			if (*(s + 1) == 0x98)
+		case 0xC2:
+			// Â§(0xC2A7)
+			if (*(s + 1) == 0xA7)
 			{
-				// ˜‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+				// Â§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 				if ((*(s + 2) >= 'A') && (*(s + 2) <= 'Z'))
 				{
 					if (s > p)
@@ -232,8 +238,8 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 					p = s;
 					continue;
 				}
-				// ˜˜‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
-				if ((*(s + 2) == 0x81) && (*(s + 3) == 0x98))
+				// Â§Â§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+				if ((*(s + 2) == 0xC2) && (*(s + 3) == 0xA7))
 				{
 					if (s > p)
 					{
@@ -243,7 +249,7 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 					p = s;
 					continue;
 				}
-				// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+				// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 				if ((*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7') && (*(s + 4) >= '0') && (*(s + 4) <= '7'))
 				{
 					if (s > p)
@@ -257,18 +263,18 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				s += 2;
 				continue;
 			}
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*(s + 1) >= 0x40) && (*(s + 1) <= 0x7E)) || ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xFC)))
+			// UTF-8ã®2ãƒã‚¤ãƒˆç›®
+			if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
 			{
 				s += 2;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
-		case 0xA7: // §
-			// §‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+		case 0xA7: // ï½§(shiftjis)
+			// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= 'A') && (*(s + 1) <= 'Z'))
 			{
 				if (s > p)
@@ -279,7 +285,7 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// §§‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
+			// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
 			if (*(s + 1) == 0xA7)
 			{
 				if (s > p)
@@ -290,7 +296,7 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7'))
 			{
 				if (s > p)
@@ -301,12 +307,59 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
+		case 0xEF: // ï½§(0xEFBDA7)
+			if ((*(s + 1) == 0xBD) && (*(s + 2) == 0xA7))
+			{
+				// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
+				if ((*(s + 3) >= 'A') && (*(s + 3) <= 'Z'))
+				{
+					if (s > p)
+					{
+						nWidth += GetTextWidthWord(p, s - p, nMagicCode);
+					}
+					s += 4;
+					p = s;
+					continue;
+				}
+				// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+				if ((*(s + 3) == 0xEF) && (*(s + 4) == 0xBD) && (*(s + 5) == 0xA7))
+				{
+					if (s > p)
+					{
+						nWidth += GetTextWidthWord(p, s - p, nMagicCode);
+					}
+					s += 6;
+					p = s;
+					continue;
+				}
+				// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
+				if ((*(s + 3) >= '0') && (*(s + 3) <= '7') && (*(s + 4) >= '0') && (*(s + 4) <= '7') && (*(s + 5) >= '0') && (*(s + 5) <= '7'))
+				{
+					if (s > p)
+					{
+						nWidth += GetTextWidthWord(p, s - p, nMagicCode);
+					}
+					s += 6;
+					p = s;
+					continue;
+				}
+			}
+			// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+				s += 3;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		case '%':
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7'))
 			{
 				if (s > p)
@@ -317,12 +370,12 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		case '$':
-			// ƒRƒCƒ“‰æ‘œ‚ª‚ ‚ê‚Î•‚ğ‰ÁZ‚·‚é
+			// ã‚³ã‚¤ãƒ³ç”»åƒãŒã‚ã‚Œã°å¹…ã‚’åŠ ç®—ã™ã‚‹
 			if (hBitmapCoin != NULL)
 			{
 				if (s > p)
@@ -334,13 +387,13 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// ƒRƒCƒ“‰æ‘œ‚ª‚È‚¯‚ê‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ã‚³ã‚¤ãƒ³ç”»åƒãŒãªã‘ã‚Œã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
-		case '\\': // ƒGƒXƒP[ƒv‹L†
-			// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É%/§/$‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
-			if (*(s + 1) == '%' || *(s + 1) == 0xA7 || *(s + 1) == '$')
+		case 0x5C: // ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å· '\\'(shiftjis) or ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«%/$ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if (*(s + 1) == '%' || *(s + 1) == '$')
 			{
 				if (s > p)
 				{
@@ -352,8 +405,8 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É˜‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
-			if ((*(s + 1) == 0x81) && (*(s + 2) == 0x98))
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«Â§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if ((*(s + 1) == 0xC2) && (*(s + 2) == 0xA7))
 			{
 				if (s > p)
 				{
@@ -365,13 +418,26 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«ï½§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if ((*(s + 1) == 0xEF) && (*(s + 2) == 0xBD) && (*(s + 3) == 0xA7))
+			{
+				if (s > p)
+				{
+					nWidth += GetTextWidthWord(p, s - p, nMagicCode);
+				}
+				s++;
+				nWidth += GetTextWidthWord(s, 2, nMagicCode);
+				s += 3;
+				p = s;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		case 0x0A:
 		case 0x0D:
-			// ‰üsƒR[ƒh
+			// æ”¹è¡Œã‚³ãƒ¼ãƒ‰
 			if (s > p)
 			{
 				nWidth += GetTextWidthWord(p, s - p, nMagicCode);
@@ -384,12 +450,12 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 			}
 			nWidth = 0;
 			nLines++;
-			// Å‘å•\¦‰Â”\s”‚É“’B‚µ‚Ä‚¢‚È‚¯‚ê‚ÎŒvZ‚ğŒp‘±‚·‚é
+			// æœ€å¤§è¡¨ç¤ºå¯èƒ½è¡Œæ•°ã«åˆ°é”ã—ã¦ã„ãªã‘ã‚Œã°è¨ˆç®—ã‚’ç¶™ç¶šã™ã‚‹
 			if (nLines < nMaxLines)
 			{
 				continue;
 			}
-			// Å‘å•\¦‰Â”\s”‚É“’B‚µ‚½‚çŒvZ‚ğ‘Å‚¿Ø‚é
+			// æœ€å¤§è¡¨ç¤ºå¯èƒ½è¡Œæ•°ã«åˆ°é”ã—ãŸã‚‰è¨ˆç®—ã‚’æ‰“ã¡åˆ‡ã‚‹
 			*(char *)(s - 1) = '\0';
 			break;
 
@@ -422,7 +488,7 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 		case 0x1D:
 		case 0x1E:
 		case 0x1F:
-			// ‰üsˆÈŠO‚Ì§ŒäƒR[ƒh‚È‚ç‚Î“Ç‚İ”ò‚Î‚·
+			// æ”¹è¡Œä»¥å¤–ã®åˆ¶å¾¡ã‚³ãƒ¼ãƒ‰ãªã‚‰ã°èª­ã¿é£›ã°ã™
 			if (s > p)
 			{
 				nWidth += GetTextWidthWord(p, s - p, nMagicCode);
@@ -431,36 +497,47 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 			p = s;
 			continue;
 
-		case 0x82:
-		case 0x83:
-		case 0x84:
-		case 0x85:
-		case 0x86:
-		case 0x87:
-		case 0x88:
-		case 0x89:
-		case 0x8A:
-		case 0x8B:
-		case 0x8C:
-		case 0x8D:
-		case 0x8E:
-		case 0x8F:
-		case 0x90:
-		case 0x91:
-		case 0x92:
-		case 0x93:
-		case 0x94:
-		case 0x95:
-		case 0x96:
-		case 0x97:
-		case 0x98:
-		case 0x99:
-		case 0x9A:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
+		case 0xC0:
+		case 0xC1:
+		case 0xC3:
+		case 0xC4:
+		case 0xC5:
+		case 0xC6:
+		case 0xC7:
+		case 0xC8:
+		case 0xC9:
+		case 0xCA:
+		case 0xCB:
+		case 0xCC:
+		case 0xCD:
+		case 0xCE:
+		case 0xCF:
+		case 0xD0:
+		case 0xD1:
+		case 0xD2:
+		case 0xD3:
+		case 0xD4:
+		case 0xD5:
+		case 0xD6:
+		case 0xD7:
+		case 0xD8:
+		case 0xD9:
+		case 0xDA:
+		case 0xDB:
+		case 0xDC:
+		case 0xDD:
+		case 0xDE:
+		case 0xDF:
+			// UTF-8ã®2ãƒã‚¤ãƒˆæ–‡å­— (Â§ãŒã‚ã‚‹0xC2é–‹å§‹ä»¥å¤–)
+			if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+			{
+				s += 2;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xE0:
 		case 0xE1:
 		case 0xE2:
@@ -476,7 +553,16 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 		case 0xEC:
 		case 0xED:
 		case 0xEE:
-		case 0xEF:
+			// UTF-8ã®3ãƒã‚¤ãƒˆæ–‡å­— (ï½§ãŒã‚ã‚‹0xEFé–‹å§‹ä»¥å¤–)
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+				s += 3;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xF0:
 		case 0xF1:
 		case 0xF2:
@@ -485,28 +571,49 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 		case 0xF5:
 		case 0xF6:
 		case 0xF7:
+			// UTF-8ã®4ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
+			{
+				s += 4;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xF8:
 		case 0xF9:
 		case 0xFA:
 		case 0xFB:
-		case 0xFC:
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*(s + 1) >= 0x40) && (*(s + 1) <= 0x7E)) || ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xFC)))
+			// UTF-8ã®5ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
 			{
-				s += 2;
+				s += 5;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
+		case 0xFC:
+		case 0xFD:
+			// UTF-8ã®6ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
+			{
+				s += 6;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		default:
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 		}
-		// Å‘å•\¦‰Â”\s”‚É“’B‚µ‚½‚ÉŒvZ‚ğ‘Å‚¿Ø‚é‚½‚ß‚Ìbreak
-		// ‘±‚¯‚éê‡‚Íswitch•¶‚Ì’†‚Écontinue‚ğ‘‚¢‚Äƒ‹[ƒv‚Ìæ“ª‚Ö”ò‚Ô‚±‚Æ
+		// æœ€å¤§è¡¨ç¤ºå¯èƒ½è¡Œæ•°ã«åˆ°é”ã—ãŸæ™‚ã«è¨ˆç®—ã‚’æ‰“ã¡åˆ‡ã‚‹ãŸã‚ã®break
+		// ç¶šã‘ã‚‹å ´åˆã¯switchæ–‡ã®ä¸­ã«continueã‚’æ›¸ã„ã¦ãƒ«ãƒ¼ãƒ—ã®å…ˆé ­ã¸é£›ã¶ã“ã¨
 		break;
 	}
 	if (s > p)
@@ -536,19 +643,58 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 }
 
 //
-// ’PŒê‚Ì•¶š—ñ•‚ğæ“¾‚·‚é
+// å˜èªã®æ–‡å­—åˆ—å¹…ã‚’å–å¾—ã™ã‚‹
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpString		‘ÎÛ•¶š—ñ
-//   nLen           •¶š—ñ’·(Byte’PˆÊ)
-//   nMagicCode		ƒtƒHƒ“ƒgw’è—pƒ}ƒWƒbƒNƒR[ƒh
-// –ß‚è’l
-//   •¶š—ñ•
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   nLen           æ–‡å­—åˆ—é•·(Byteå˜ä½)
+//   nMagicCode		ãƒ•ã‚©ãƒ³ãƒˆæŒ‡å®šç”¨ãƒã‚¸ãƒƒã‚¯ã‚³ãƒ¼ãƒ‰
+// æˆ»ã‚Šå€¤
+//   æ–‡å­—åˆ—å¹…
 //
 int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode)
 {
+	//æ–‡å­—åˆ—ã‚’UTF-8ã‹ã‚‰UTF-16ã«å¤‰æ›ã™ã‚‹
+	LPCBYTE s = lpString;
+	DWORD u32chr;
+	WORD p[256];
+	int u8charlength = 0;
+	int u8wordlength = 0;
+	int i = 0;
+
+	while (u8wordlength < nLen)
+	{
+		u8charlength = Utf8CharLength(s);
+		CharUtf8toUtf32(s, &u32chr);
+		
+		//ä¸æ˜æ–‡å­—ãªã‚‰å‡¦ç†ã‚’ä¸­æ–­ã™ã‚‹
+		if (u32chr == 0)
+		{
+			if (i != 0)
+			{
+				break;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		u8wordlength += u8charlength;
+		s += u8charlength;
+
+		if (u32chr < 0x10000) {
+			p[i++] = WORD(u32chr);
+		}
+		else
+		{
+			p[i++] = WORD((u32chr - 0x10000) / 0x400 + 0xD800);
+			p[i++] = WORD((u32chr - 0x10000) % 0x400 + 0xDC00);
+		}
+	}
+
 	SIZE size;
-	GetTextExtentPoint32(hDesktopDC, (LPCSTR)lpString, nLen, &size);
+	GetTextExtentPoint32W(hDesktopDC, (LPCWSTR)p, i, &size);
 
 #if _INMM_LOG_OUTPUT
 #ifndef _INMM_PERF_LOG
@@ -563,16 +709,16 @@ int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode)
 }
 
 //
-// •¶š—ñ‚ğo—Í‚·‚é (ƒIƒŠƒWƒiƒ‹”ÅŒİŠ·)
+// æ–‡å­—åˆ—ã‚’å‡ºåŠ›ã™ã‚‹ (ã‚ªãƒªã‚¸ãƒŠãƒ«ç‰ˆäº’æ›)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   x				o—ÍæXÀ•W
-//   y				o—ÍæYÀ•W
-//   lpString		‘ÎÛ•¶š—ñ
-//   lpDDS			DirectDrawƒT[ƒtƒF[ƒX‚Ö‚Ìƒ|ƒCƒ“ƒ^
-//   nMagicCode		ƒtƒHƒ“ƒgw’è—pƒ}ƒWƒbƒNƒR[ƒh
-//   dwColor		Fw’è(R-G-B‚ğ5bit-6bit-5bit‚ÌWORD’l‚Å)
-//   dwFlags		ƒtƒ‰ƒO(1‚Å‘¾•¶š/2‚Å‰e•t‚«)
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   x				å‡ºåŠ›å…ˆXåº§æ¨™
+//   y				å‡ºåŠ›å…ˆYåº§æ¨™
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   lpDDS			DirectDrawã‚µãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+//   nMagicCode		ãƒ•ã‚©ãƒ³ãƒˆæŒ‡å®šç”¨ãƒã‚¸ãƒƒã‚¯ã‚³ãƒ¼ãƒ‰
+//   dwColor		è‰²æŒ‡å®š(R-G-Bã‚’5bit-6bit-5bitã®WORDå€¤ã§)
+//   dwFlags		ãƒ•ãƒ©ã‚°(1ã§å¤ªæ–‡å­—/2ã§å½±ä»˜ã)
 //
 void WINAPI TextOutDC0(int x, int y, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS, int nMagicCode, DWORD dwColor, DWORD dwFlags)
 {
@@ -580,17 +726,17 @@ void WINAPI TextOutDC0(int x, int y, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS
 }
 
 //
-// •¶š—ñ‚ğo—Í‚·‚é (ƒNƒŠƒbƒsƒ“ƒO‘Î‰”Å)
+// æ–‡å­—åˆ—ã‚’å‡ºåŠ›ã™ã‚‹ (ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°å¯¾å¿œç‰ˆ)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpRect         ƒNƒŠƒbƒsƒ“ƒO‹éŒ`(NULL‚Ìê‡‚ÍƒNƒŠƒbƒsƒ“ƒO‚È‚µ)
-//   x				o—ÍæXÀ•W
-//   y				o—ÍæYÀ•W
-//   lpString		‘ÎÛ•¶š—ñ
-//   lpDDS			DirectDrawƒT[ƒtƒF[ƒX‚Ö‚Ìƒ|ƒCƒ“ƒ^
-//   nMagicCode		ƒtƒHƒ“ƒgw’è—pƒ}ƒWƒbƒNƒR[ƒh
-//   dwColor		Fw’è(R-G-B‚ğ5bit-6bit-5bit‚ÌWORD’l‚Å)
-//   dwFlags		ƒtƒ‰ƒO(1‚Å‘¾•¶š/2‚Å‰e•t‚«)
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpRect         ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°çŸ©å½¢(NULLã®å ´åˆã¯ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ãªã—)
+//   x				å‡ºåŠ›å…ˆXåº§æ¨™
+//   y				å‡ºåŠ›å…ˆYåº§æ¨™
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   lpDDS			DirectDrawã‚µãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+//   nMagicCode		ãƒ•ã‚©ãƒ³ãƒˆæŒ‡å®šç”¨ãƒã‚¸ãƒƒã‚¯ã‚³ãƒ¼ãƒ‰
+//   dwColor		è‰²æŒ‡å®š(R-G-Bã‚’5bit-6bit-5bitã®WORDå€¤ã§)
+//   dwFlags		ãƒ•ãƒ©ã‚°(1ã§å¤ªæ–‡å­—/2ã§å½±ä»˜ã)
 //
 
 void WINAPI TextOutDC1(LPRECT lpRect, int x, int y, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS, int nMagicCode, DWORD dwColor, DWORD dwFlags)
@@ -599,17 +745,17 @@ void WINAPI TextOutDC1(LPRECT lpRect, int x, int y, LPCBYTE lpString, LPDIRECTDR
 }
 
 //
-// •¶š—ñ‚ğo—Í‚·‚é (o—ÍˆÊ’uXV‘Î‰”Å)
+// æ–‡å­—åˆ—ã‚’å‡ºåŠ›ã™ã‚‹ (å‡ºåŠ›ä½ç½®æ›´æ–°å¯¾å¿œç‰ˆ)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpRect         ƒNƒŠƒbƒsƒ“ƒO‹éŒ`(NULL‚Ìê‡‚ÍƒNƒŠƒbƒsƒ“ƒO‚È‚µ)
-//   px				o—ÍæXÀ•W‚Ö‚ÌQÆ
-//   py				o—ÍæYÀ•W‚Ö‚ÌQÆ
-//   lpString		‘ÎÛ•¶š—ñ
-//   lpDDS			DirectDrawƒT[ƒtƒF[ƒX‚Ö‚Ìƒ|ƒCƒ“ƒ^
-//   nMagicCode		ƒtƒHƒ“ƒgw’è—pƒ}ƒWƒbƒNƒR[ƒh
-//   dwColor		Fw’è(R-G-B‚ğ5bit-6bit-5bit‚ÌWORD’l‚Å)
-//   dwFlags		ƒtƒ‰ƒO(1‚Å‘¾•¶š/2‚Å‰e•t‚«)
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpRect         ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°çŸ©å½¢(NULLã®å ´åˆã¯ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ãªã—)
+//   px				å‡ºåŠ›å…ˆXåº§æ¨™ã¸ã®å‚ç…§
+//   py				å‡ºåŠ›å…ˆYåº§æ¨™ã¸ã®å‚ç…§
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   lpDDS			DirectDrawã‚µãƒ¼ãƒ•ã‚§ãƒ¼ã‚¹ã¸ã®ãƒã‚¤ãƒ³ã‚¿
+//   nMagicCode		ãƒ•ã‚©ãƒ³ãƒˆæŒ‡å®šç”¨ãƒã‚¸ãƒƒã‚¯ã‚³ãƒ¼ãƒ‰
+//   dwColor		è‰²æŒ‡å®š(R-G-Bã‚’5bit-6bit-5bitã®WORDå€¤ã§)
+//   dwFlags		ãƒ•ãƒ©ã‚°(1ã§å¤ªæ–‡å­—/2ã§å½±ä»˜ã)
 //
 void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRECTDRAWSURFACE lpDDS, int nMagicCode, DWORD dwColor, DWORD dwFlags)
 {
@@ -647,14 +793,14 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 	{
 		switch (*s)
 		{
-		case 0x81:
-			// ˜
-			if (*(s + 1) == 0x98)
+		case 0xC2:
+			// Â§(0xC2A7)
+			if (*(s + 1) == 0xA7)
 			{
-				// ˜‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+				// Â§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 				if ((*(s + 2) >= 'A') && (*(s + 2) <= 'Z'))
 				{
-					// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 					if (s > p)
 					{
 						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -665,10 +811,10 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 					p = s;
 					continue;
 				}
-				// ˜˜‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
-				if ((*(s + 2) == 0x81) && (*(s + 3) == 0x98))
+				// Â§Â§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+				if ((*(s + 2) == 0xC2) && (*(s + 3) == 0xA7))
 				{
-					// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 					if (s > p)
 					{
 						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -680,10 +826,10 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 					p = s;
 					continue;
 				}
-				// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+				// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 				if ((*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7') && (*(s + 4) >= '0') && (*(s + 4) <= '7'))
 				{
-					// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 					if (s > p)
 					{
 						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -697,21 +843,21 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				s += 2;
 				continue;
 			}
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*(s + 1) >= 0x40) && (*(s + 1) <= 0x7E)) || ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xFC)))
+			// UTF-8ã®2ãƒã‚¤ãƒˆç›®
+			if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
 			{
 				s += 2;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
-		case 0xA7: // §
-			// §‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+		case 0xA7: // ï½§(shiftjis)
+			// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= 'A') && (*(s + 1) <= 'Z'))
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -722,10 +868,10 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// §§‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
+			// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
 			if (*(s + 1) == 0xA7)
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -737,10 +883,10 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7'))
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -751,15 +897,72 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
+		case 0xEF: // ï½§(0xEFBDA7)
+			if ((*(s + 1) == 0xBD) && (*(s + 2) == 0xA7))
+			{
+				// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
+				if ((*(s + 3) >= 'A') && (*(s + 3) <= 'Z'))
+				{
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
+					if (s > p)
+					{
+						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
+					}
+					colorOld = color;
+					color = RGB(colorTable[*(s + 3) - 'A'].r, colorTable[*(s + 3) - 'A'].g, colorTable[*(s + 3) - 'A'].b);
+					s += 4;
+					p = s;
+					continue;
+				}
+				// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+				if ((*(s + 3) == 0xEF) && (*(s + 4) == 0xBD) && (*(s + 5) == 0xA7))
+				{
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
+					if (s > p)
+					{
+						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
+					}
+					COLORREF temp = color;
+					color = colorOld;
+					colorOld = temp;
+					s += 6;
+					p = s;
+					continue;
+				}
+				// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
+				if ((*(s + 3) >= '0') && (*(s + 3) <= '7') && (*(s + 4) >= '0') && (*(s + 4) <= '7') && (*(s + 5) >= '0') && (*(s + 5) <= '7'))
+				{
+					// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
+					if (s > p)
+					{
+						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
+					}
+					colorOld = color;
+					color = RGB((*(s + 3) - '0') << 5, (*(s + 2) - '0') << 5, (*(s + 1) - '0') << 5);
+					s += 6;
+					p = s;
+					continue;
+				}
+			}
+			// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+				s += 3;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		case '%':
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7') && (*(s + 3) >= '0') && (*(s + 3) <= '7'))
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -770,34 +973,34 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		case '$':
-			// ƒRƒCƒ“‰æ‘œ‚ª‚ ‚ê‚Î•\¦‚·‚é
+			// ã‚³ã‚¤ãƒ³ç”»åƒãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 			if (hBitmapCoin != NULL)
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
 				}
-				// ƒRƒCƒ“‰æ‘œ‚ğ•\¦‚·‚é
+				// ã‚³ã‚¤ãƒ³ç”»åƒã‚’è¡¨ç¤ºã™ã‚‹
 				ShowCoinImage(&pt, hDC);
 				s++;
 				p = s;
 				continue;
 			}
-			// ƒRƒCƒ“‰æ‘œ‚ª‚È‚¯‚ê‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ã‚³ã‚¤ãƒ³ç”»åƒãŒãªã‘ã‚Œã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
-		case '\\': // ƒGƒXƒP[ƒv‹L†
-			// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É%/§/$‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
-			if (*(s + 1) == '%' || *(s + 1) == 0xA7 || *(s + 1) == '$')
+		case 0x5C: // ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å· '\\'(shiftjis) or ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«%/$ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if (*(s + 1) == '%' || *(s + 1) == '$')
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -808,10 +1011,10 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É˜‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
-			if ((*(s + 1) == 0x81) && (*(s + 2) == 0x98))
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«Â§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if ((*(s + 1) == 0xA2) && (*(s + 2) == 0xA7))
 			{
-				// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 				if (s > p)
 				{
 					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -822,7 +1025,21 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				p = s;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«ï½§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			if ((*(s + 1) == 0xEF) && (*(s + 2) == 0xBD) && (*(s + 3) == 0xA7))
+			{
+				// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
+				if (s > p)
+				{
+					TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
+				}
+				s++;
+				TextOutWord(s, 2, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
+				s += 3;
+				p = s;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
@@ -855,46 +1072,57 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 		case 0x1D:
 		case 0x1E:
 		case 0x1F:
-			// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+			// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 			if (s > p)
 			{
 				TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
 			}
-			// §ŒäƒR[ƒh‚ğ“Ç‚İ”ò‚Î‚·
+			// åˆ¶å¾¡ã‚³ãƒ¼ãƒ‰ã‚’èª­ã¿é£›ã°ã™
 			s++;
 			p = s;
 			continue;
 
-		case 0x82:
-		case 0x83:
-		case 0x84:
-		case 0x85:
-		case 0x86:
-		case 0x87:
-		case 0x88:
-		case 0x89:
-		case 0x8A:
-		case 0x8B:
-		case 0x8C:
-		case 0x8D:
-		case 0x8E:
-		case 0x8F:
-		case 0x90:
-		case 0x91:
-		case 0x92:
-		case 0x93:
-		case 0x94:
-		case 0x95:
-		case 0x96:
-		case 0x97:
-		case 0x98:
-		case 0x99:
-		case 0x9A:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
+		case 0xC0:
+		case 0xC1:
+		case 0xC3:
+		case 0xC4:
+		case 0xC5:
+		case 0xC6:
+		case 0xC7:
+		case 0xC8:
+		case 0xC9:
+		case 0xCA:
+		case 0xCB:
+		case 0xCC:
+		case 0xCD:
+		case 0xCE:
+		case 0xCF:
+		case 0xD0:
+		case 0xD1:
+		case 0xD2:
+		case 0xD3:
+		case 0xD4:
+		case 0xD5:
+		case 0xD6:
+		case 0xD7:
+		case 0xD8:
+		case 0xD9:
+		case 0xDA:
+		case 0xDB:
+		case 0xDC:
+		case 0xDD:
+		case 0xDE:
+		case 0xDF:
+			// UTF-8ã®2ãƒã‚¤ãƒˆæ–‡å­— (Â§ãŒã‚ã‚‹0xC2é–‹å§‹ä»¥å¤–)
+			if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+			{
+				s += 2;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xE0:
 		case 0xE1:
 		case 0xE2:
@@ -910,7 +1138,16 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 		case 0xEC:
 		case 0xED:
 		case 0xEE:
-		case 0xEF:
+			// UTF-8ã®3ãƒã‚¤ãƒˆæ–‡å­— (ï½§ãŒã‚ã‚‹0xEFé–‹å§‹ä»¥å¤–)
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+				s += 3;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xF0:
 		case 0xF1:
 		case 0xF2:
@@ -919,28 +1156,49 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 		case 0xF5:
 		case 0xF6:
 		case 0xF7:
+			// UTF-8ã®4ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
+			{
+				s += 4;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
 		case 0xF8:
 		case 0xF9:
 		case 0xFA:
 		case 0xFB:
-		case 0xFC:
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*(s + 1) >= 0x40) && (*(s + 1) <= 0x7E)) || ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xFC)))
+			// UTF-8ã®5ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
 			{
-				s += 2;
+				s += 5;
 				continue;
 			}
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+			s++;
+			continue;
+
+		case 0xFC:
+		case 0xFD:
+			// UTF-8ã®6ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
+			{
+				s += 6;
+				continue;
+			}
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 
 		default:
-			// ‚»‚êˆÈŠO‚È‚ç‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// ãã‚Œä»¥å¤–ãªã‚‰ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			s++;
 			continue;
 		}
 	}
-	// o—Í‚·‚é•¶š—ñ‚ª‚ ‚ê‚Î•\¦‚·‚é
+	// å‡ºåŠ›ã™ã‚‹æ–‡å­—åˆ—ãŒã‚ã‚Œã°è¡¨ç¤ºã™ã‚‹
 	if (s > p)
 	{
 		TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
@@ -961,16 +1219,16 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 }
 
 //
-// ’PŒê‚ğo—Í‚·‚é(“r’†‚ÅF•ÏX‚Í‚È‚µ)
+// å˜èªã‚’å‡ºåŠ›ã™ã‚‹(é€”ä¸­ã§è‰²å¤‰æ›´ã¯ãªã—)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpString		‘ÎÛ•¶š—ñ
-//   nLen           •¶š—ñ’·(Byte’PˆÊ)
-//   lpPoint        o—ÍæÀ•W
-//   lpRect         ƒNƒŠƒbƒsƒ“ƒO‹éŒ`(NULL‚Ìê‡‚ÍƒNƒŠƒbƒsƒ“ƒO‚È‚µ)
-//   hDC			ƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
-//   color			Fw’è
-//   dwFlags		ƒtƒ‰ƒO(1‚Å‘¾•¶š/2‚Å‰e•t‚«)
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   nLen           æ–‡å­—åˆ—é•·(Byteå˜ä½)
+//   lpPoint        å‡ºåŠ›å…ˆåº§æ¨™
+//   lpRect         ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°çŸ©å½¢(NULLã®å ´åˆã¯ã‚¯ãƒªãƒƒãƒ”ãƒ³ã‚°ãªã—)
+//   hDC			ãƒ‡ãƒã‚¤ã‚¹ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
+//   color			è‰²æŒ‡å®š
+//   dwFlags		ãƒ•ãƒ©ã‚°(1ã§å¤ªæ–‡å­—/2ã§å½±ä»˜ã)
 // 
 void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC hDC, int nMagicCode, COLORREF color, DWORD dwFlags)
 {
@@ -985,44 +1243,189 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 	int x = lpPoint->x + fontTable[nMagicCode].nAdjustX;
 	int y = lpPoint->y + fontTable[nMagicCode].nAdjustY;
 
-	// ‰e‚ğ•t‚¯‚éê‡‚Ío—ÍˆÊ’u‚Ì‰E‰º‚É•‚Åo—Í‚·‚é
+
+	//æ–‡å­—åˆ—ã‚’UTF-8ã‹ã‚‰UTF-16ã«å¤‰æ›ã™ã‚‹
+	LPCBYTE s = lpString;
+	DWORD u32chr;
+	WORD p[256];
+	int u8charlength = 0;
+	int u8wordlength = 0;
+	int i = 0;
+
+	while (u8wordlength < nLen)
+	{
+		u8charlength = Utf8CharLength(s);
+		CharUtf8toUtf32(s, &u32chr);
+
+		//ä¸æ˜æ–‡å­—ãªã‚‰å‡¦ç†ã‚’ä¸­æ–­ã™ã‚‹
+		if (u32chr == 0)
+		{
+			if (i != 0)
+			{
+				break;
+			}
+			else
+			{
+				return;
+			}
+		}
+
+		u8wordlength += u8charlength;
+		s += u8charlength;
+
+		if (u32chr < 0x10000) {
+			p[i++] = WORD(u32chr);
+		}
+		else
+		{
+			p[i++] = WORD((u32chr - 0x10000) / 0x400 + 0xD800);
+			p[i++] = WORD((u32chr - 0x10000) % 0x400 + 0xDC00);
+		}
+	}
+
+
+	// å½±ã‚’ä»˜ã‘ã‚‹å ´åˆã¯å‡ºåŠ›ä½ç½®ã®å³ä¸‹ã«é»’ã§å‡ºåŠ›ã™ã‚‹
 	bool bShadowed = ((dwFlags & 2) != 0);
 	if (bShadowed)
 	{
 		SetTextColor(hDC, RGB(0, 0, 0));
 		if (lpRect != NULL)
 		{
-			ExtTextOut(hDC, x + 1, y + 1, ETO_CLIPPED, lpRect, (LPCSTR)lpString, nLen, NULL);
+			ExtTextOutW(hDC, x + 1, y + 1, ETO_CLIPPED, lpRect, (LPCWSTR)p, i, NULL);
 		}
 		else
 		{
-			TextOut(hDC, x + 1, y + 1, (LPCSTR)lpString, nLen);
+			TextOutW(hDC, x + 1, y + 1, (LPCWSTR)p, i);
 		}
 	}
 
-	// w’èF‚Åo—Í‚·‚é
+	// æŒ‡å®šè‰²ã§å‡ºåŠ›ã™ã‚‹
 	SetTextColor(hDC, color);
 	if (lpRect != NULL)
 	{
-		ExtTextOut(hDC, x, y, ETO_CLIPPED, lpRect, (LPCSTR)lpString, nLen, NULL);
+		ExtTextOutW(hDC, x, y, ETO_CLIPPED, lpRect, (LPCWSTR)p, i, NULL);
 	}
 	else
 	{
-		TextOut(hDC, x, y, (LPCSTR)lpString, nLen);
+		TextOutW(hDC, x, y, (LPCWSTR)p, i);
 	}
 	
-	// o—ÍˆÊ’u‚ğXV‚·‚é
+	// å‡ºåŠ›ä½ç½®ã‚’æ›´æ–°ã™ã‚‹
 	SIZE size;
-	GetTextExtentPoint32(hDC, (LPCSTR)lpString, nLen, &size);
+	GetTextExtentPoint32W(hDC, (LPCWSTR)p, i, &size);
 	lpPoint->x += size.cx;
 }
 
+
 //
-// ƒRƒCƒ“‰æ‘œ‚ğ•\¦‚·‚é
+// æ–‡å­—ã‚’UTF-32ã‹ã‚‰UTF-16ã«å¤‰æ›ã™ã‚‹
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpPoint        o—ÍæÀ•W
-//   hDC			ƒfƒoƒCƒXƒRƒ“ƒeƒLƒXƒg‚Ìƒnƒ“ƒhƒ‹
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpstringdw		å¤‰æ›å‰æ–‡å­—åˆ—
+//   WordString		å¤‰æ›å¾Œæ–‡å­—åˆ—
+//
+void CharUtf32toUtf16(LPDWORD lpStringdw, LPWORD stringword)
+{
+}
+//
+// æ–‡å­—ã‚’UTF-8ã‹ã‚‰UTF32ã«å¤‰æ›ã™ã‚‹
+//
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpString			å¯¾è±¡æ–‡å­—åˆ—
+//   stringword			å¤‰æ›å¾Œå¾Œæ–‡å­—
+//
+void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringdword)
+{
+	LPCBYTE s = lpString;
+	LPDWORD p = stringdword;
+
+	int charlength = Utf8CharLength(s);
+
+	switch (charlength)
+	{
+		case 1:
+			*p = *s;
+			break;
+
+		case 2:
+			*p = (*s & 0x1F) << 6;
+			*p |= (*(s+1) & 0x3F);
+			break;
+
+		case 3:
+			*p = (*s & 0x0F) << 12;
+			*p |= (*(s+1) & 0x3F) << 6;
+			*p |= (*(s+2) & 0x3F);
+			break;
+
+		case 4:
+			*p = (*s & 0x07) << 18;
+			*p |= (*(s+1) & 0x3F) << 12;
+			*p |= (*(s+2) & 0x3F) << 6;
+			*p |= (*(s+3) & 0x3F);
+			break;
+
+		default:
+			//ä¸æ˜ãªã‚‰0ã‚’å…¥ã‚Œã‚‹
+			*p = 0;
+			break;
+	}
+}
+
+//
+//utf-8ã®å…ˆé ­ãƒã‚¤ãƒˆã‹ã‚‰æ–‡å­—æ•°ã‚’è¿”ã™
+//
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   utf8headbyte		å¯¾è±¡ãƒã‚¤ãƒˆ
+//
+int Utf8CharLength(LPCBYTE utf8headbyte)
+{
+	//1ãƒã‚¤ãƒˆutf-8ã¯0x00ã‹ã‚‰0x7Fã ãŒ 0x80-0xC1ã‚‚é€šã™ã‚ˆã†ã«ã™ã‚‹ã‹ã‚‚ã—ã‚Œãªã„
+	if ((*utf8headbyte >= 0x00) && (*utf8headbyte <= 0x7F))
+	{
+		return 1;
+	}
+	if ((*utf8headbyte >= 0xC2) && (*utf8headbyte <= 0xDF))
+	{
+		return 2;
+	}
+	if ((*utf8headbyte >= 0xE0) && (*utf8headbyte <= 0xEF))
+	{
+		return 3;
+	}
+	if ((*utf8headbyte >= 0xF0) && (*utf8headbyte <= 0xF7))
+	{
+		return 4;
+	}
+	if ((*utf8headbyte >= 0xF8) && (*utf8headbyte <= 0xFB))
+	{
+		return 5;
+	}
+	if ((*utf8headbyte >= 0xFC) && (*utf8headbyte <= 0xFD))
+	{
+		return 6;
+	}
+	return 0;
+}
+
+//
+//utf-8ã®2ãƒã‚¤ãƒˆç›®ä»¥é™ã‹å¦ã‹ã®åˆ¤å®š
+//
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   utf8laterbyte		å¯¾è±¡ãƒã‚¤ãƒˆ
+//
+bool Utf8Laterbytecheck(LPCBYTE utf8laterbyte)
+{
+	return  ((*utf8laterbyte >= 0x80) && (*utf8laterbyte <= 0x7BF));
+}
+
+
+//
+// ã‚³ã‚¤ãƒ³ç”»åƒã‚’è¡¨ç¤ºã™ã‚‹
+//
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpPoint        å‡ºåŠ›å…ˆåº§æ¨™
+//   hDC			ãƒ‡ãƒã‚¤ã‚¹ã‚³ãƒ³ãƒ†ã‚­ã‚¹ãƒˆã®ãƒãƒ³ãƒ‰ãƒ«
 //
 void ShowCoinImage(LPPOINT lpPoint, HDC hDC)
 {
@@ -1038,13 +1441,13 @@ void ShowCoinImage(LPPOINT lpPoint, HDC hDC)
 }
 
 //
-// ‰üsˆÊ’u‚ğŒvZ‚·‚é (‹Ö‘¥ˆ—‘Î‰”Å)
+// æ”¹è¡Œä½ç½®ã‚’è¨ˆç®—ã™ã‚‹ (ç¦å‰‡å‡¦ç†å¯¾å¿œç‰ˆ)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpBuffer		•¶š—ñˆ—ƒoƒbƒtƒ@
-//   lpString		‘ÎÛ•¶š—ñ
-// –ß‚è’l
-//   ˆ—‚µ‚½ƒoƒCƒg”
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpBuffer		æ–‡å­—åˆ—å‡¦ç†ãƒãƒƒãƒ•ã‚¡
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+// æˆ»ã‚Šå€¤
+//   å‡¦ç†ã—ãŸãƒã‚¤ãƒˆæ•°
 //
 int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 {
@@ -1066,7 +1469,7 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 
 	while (*s != '\0')
 	{
-		// s––‹Ö‘¥•¶š/§Œä•¶š‚Ìˆ—
+		// è¡Œæœ«ç¦å‰‡æ–‡å­—/åˆ¶å¾¡æ–‡å­—ã®å‡¦ç†
 		switch (*s)
 		{
 		case '(':
@@ -1074,213 +1477,405 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case '[':
 		case '`':
 		case '{':
-		case 0xA2: // ¢
-			// s––‹Ö‘¥•¶š‚È‚ç‚ÎŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+			// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 			*p++ = *s++;
 			continue;
 
-		case 0x81:
+		case 0xC2:
 			*p++ = *s++;
 			switch (*s)
 			{
-			case 0x4D: // M
-			case 0x65: // e
-			case 0x67: // g
-			case 0x69: // i
-			case 0x6B: // k
-			case 0x6D: // m
-			case 0x6F: // o
-			case 0x71: // q
-			case 0x73: // s
-			case 0x75: // u
-			case 0x77: // w
-			case 0x79: // y
-			case 0x83: // ƒ
-			case 0x8F: // 
-			case 0x90: // 
-				// s––‹Ö‘¥•¶š‚È‚ç‚ÎŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+			case 0xA7: // Â§(0xC2A7)
 				*p++ = *s++;
-				continue;
-
-			case 0x7B: // {
-			case 0x7C: // |
-			case 0x7D: // }
-				*p++ = *s++;
-				// ˜A”š‚Ì•ª—£‹Ö‘¥ˆ—
-				len = CalcNumberWordWrap(p, s);
-				p += len;
-				s += len;
-				break;
-
-			case 0x98: // ˜
-				*p++ = *s++;
-				// ˜‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+				// Â§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 				if ((*s >= 'A') && (*s <= 'Z'))
 				{
-					// ˜W‚Í”’F‚È‚Ì‚Å•ª—£‹Ö‘¥‘ÎÛŠO
+					// Â§Wã¯ç™½è‰²ãªã®ã§åˆ†é›¢ç¦å‰‡å¯¾è±¡å¤–
 					if (*s == 'W')
 					{
 						*p++ = *s++;
-						// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+						// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 						continue;
 					}
-					// Fw’èŒã‚Ì•ª—£‹Ö‘¥ˆ—
+					// è‰²æŒ‡å®šå¾Œã®åˆ†é›¢ç¦å‰‡å‡¦ç†
 					*p++ = *s++;
 					len = CalcColorWordWrap(p, s);
 					p += len;
 					s += len;
 					break;
 				}
-				// ˜˜‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
-				if ((*s == 0x81) && (*(s + 1) == 0x98))
+				// Â§Â§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+				if ((*s == 0xC2) && (*(s + 1) == 0xA7))
 				{
 					*p++ = *s++;
 					*p++ = *s++;
-					// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+					// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 					continue;
 				}
-				// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+				// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 				if ((*s >= '0') && (*s <= '7') && (*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7'))
 				{
 					*p++ = *s++;
 					*p++ = *s++;
 					*p++ = *s++;
-					// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+					// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 					continue;
 				}
 				break;
 
-			default:
-				// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-				if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
-				{
-					*p++ = *s++;
-					break;
-				}
-				// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
-				break;
-			}
-			break;
-
-		case 0x82:
-			*p++ = *s++;
-			// 2ƒoƒCƒg”š
-			if ((*s >= 0x16) && (*s <= 0x25))
-			{
+			case 0xB1: // Â±(0xC2B1)
 				*p++ = *s++;
-				// ˜A”š‚Ì•ª—£‹Ö‘¥ˆ—
+				// é€£æ•°å­—ã®åˆ†é›¢ç¦å‰‡å‡¦ç†
 				len = CalcNumberWordWrap(p, s);
 				p += len;
 				s += len;
 				break;
-			}
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
-			{
-				*p++ = *s++;
+
+			default:
+				// UTF-8ã®2ãƒã‚¤ãƒˆç›®
+				if ((*s >= 0x80) && (*s <= 0xBF))
+				{
+					*p++ = *s++;
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 				break;
 			}
-			// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
 			break;
 
-		case 0x87:
+		case 0xE2:
 			*p++ = *s++;
-			if (*s == 0x80) // ‡€
+			switch (*s)
 			{
-				// s––‹Ö‘¥•¶š‚È‚ç‚ÎŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
-				*p++ = *s++;
-				continue;
-			}
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
-			{
-				*p++ = *s++;
+			case 0x80:
+				switch (*(s + 1))
+				{
+				case 0x98: // â€˜
+				case 0x9C: // â€œ
+					// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				default:
+					// UTF-8ã®3ãƒã‚¤ãƒˆç›®
+					if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						break;
+					}
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+
+			default:
+					// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+				if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)))
+				{
+					*p++ = *s++;
+					*p++ = *s++;
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 				break;
 			}
-			// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
 			break;
 
-		case 0xA7: // §
+		case 0xE3:
 			*p++ = *s++;
-			// §‚ÌŒã‚É‰p‘å•¶š‚ª‘±‚¯‚ÎƒvƒŠƒZƒbƒg‚ÌFw’è
+			switch (*s)
+			{
+			case 0x80:
+				switch (*(s + 1)) // â€œ
+				{
+				case 0x94: // ã€”
+				case 0x88: // ã€ˆ
+				case 0x8A: // ã€Š
+				case 0x8C: // ã€Œ
+				case 0x8E: // ã€
+				case 0x90: // ã€
+				case 0x9D: // ã€
+					// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				default:
+					// UTF-8ã®3ãƒã‚¤ãƒˆç›®
+					if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						break;
+					}
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+
+			default:
+					// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+				if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)))
+				{
+					*p++ = *s++;
+					*p++ = *s++;
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+			}
+			break;
+
+		case 0xEF:
+			*p++ = *s++;
+			switch (*s)
+			{
+			case 0xBC:
+				switch (*(s + 1))
+				{
+				case 0x88: // ï¼ˆ
+				case 0xBB: // ï¼»
+				case 0x9C: // ï¼œ
+				case 0x84: // ï¼„
+					// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+
+				case 0x8B: // ï¼‹
+				case 0x8D: // ï¼
+					*p++ = *s++;
+					*p++ = *s++;
+					// é€£æ•°å­—ã®åˆ†é›¢ç¦å‰‡å‡¦ç†
+					len = CalcNumberWordWrap(p, s);
+					p += len;
+					s += len;
+				break;
+
+				case 0x90: // ï¼
+				case 0x91: // ï¼‘
+				case 0x92: // ï¼’
+				case 0x93: // ï¼“
+				case 0x94: // ï¼”
+				case 0x95: // ï¼•
+				case 0x96: // ï¼–
+				case 0x97: // ï¼—
+				case 0x98: // ï¼˜
+				case 0x99: // ï¼™
+					*p++ = *s++;
+					*p++ = *s++;
+					// é€£æ•°å­—ã®åˆ†é›¢ç¦å‰‡å‡¦ç†
+					len = CalcNumberWordWrap(p, s);
+					p += len;
+					s += len;
+				break;
+
+				default:
+					// UTF-8ã®3ãƒã‚¤ãƒˆç›®
+					if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						break;
+					}
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+
+			case 0xBD:
+				switch (*(s + 1))
+				{
+				case 0x80: // ï½€
+				case 0x9B: // ï½›
+				case 0xA2: // ï½¢
+					// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+
+				case 0xA7: // ï½§
+					*p++ = *s++;
+					*p++ = *s++;
+					// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
+					if ((*s >= 'A') && (*s <= 'Z'))
+					{
+						// ï½§Wã¯ç™½è‰²ãªã®ã§åˆ†é›¢ç¦å‰‡å¯¾è±¡å¤–
+						if (*s == 'W')
+						{
+							*p++ = *s++;
+							// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+							continue;
+						}
+						// è‰²æŒ‡å®šå¾Œã®åˆ†é›¢ç¦å‰‡å‡¦ç†
+						*p++ = *s++;
+						len = CalcColorWordWrap(p, s);
+						p += len;
+						s += len;
+						break;
+					}
+					// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
+					if ((*s == 0xEF) && (*(s + 1) == 0xBD) && (*(s + 2) == 0xA7))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						*p++ = *s++;
+						// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+						continue;
+					}
+					// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
+					if ((*s >= '0') && (*s <= '7') && (*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7'))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						*p++ = *s++;
+						// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+						continue;
+					}
+					break;
+
+				default:
+					// UTF-8ã®3ãƒã‚¤ãƒˆç›®
+					if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						break;
+					}
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+
+			case 0xBF:
+				switch (*(s + 1))
+				{
+				case 0xA5: // ï¿¥
+					// è¡Œæœ«ç¦å‰‡æ–‡å­—ãªã‚‰ã°æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				default:
+					// UTF-8ã®3ãƒã‚¤ãƒˆç›®
+					if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
+					{
+						*p++ = *s++;
+						*p++ = *s++;
+						break;
+					}
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+
+			default:
+					// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+				if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)))
+				{
+					*p++ = *s++;
+					*p++ = *s++;
+					break;
+				}
+				// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+				break;
+			}
+			break;
+
+		case 0xA7: // ï½§
+			*p++ = *s++;
+			// ï½§ã®å¾Œã«è‹±å¤§æ–‡å­—ãŒç¶šã‘ã°ãƒ—ãƒªã‚»ãƒƒãƒˆã®è‰²æŒ‡å®š
 			if ((*s >= 'A') && (*s <= 'Z'))
 			{
-				// §W‚Í”’F‚È‚Ì‚Å•ª—£‹Ö‘¥‘ÎÛŠO
+				// ï½§Wã¯ç™½è‰²ãªã®ã§åˆ†é›¢ç¦å‰‡å¯¾è±¡å¤–
 				if (*s == 'W')
 				{
 					*p++ = *s++;
-					// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+					// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 					continue;
 				}
-				// Fw’èŒã‚Ì•ª—£‹Ö‘¥ˆ—
+				// è‰²æŒ‡å®šå¾Œã®åˆ†é›¢ç¦å‰‡å‡¦ç†
 				*p++ = *s++;
 				len = CalcColorWordWrap(p, s);
 				p += len;
 				s += len;
 				break;
 			}
-			// §§‚È‚ç‚ÎŒ³‚ÌF‚É–ß‚·
+			// ï½§ï½§ãªã‚‰ã°å…ƒã®è‰²ã«æˆ»ã™
 			if (*s == 0xA7)
 			{
 				*p++ = *s++;
-				// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+				// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 				continue;
 			}
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*s >= '0') && (*s <= '7') && (*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7'))
 			{
 				*p++ = *s++;
 				*p++ = *s++;
 				*p++ = *s++;
-				// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+				// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 				continue;
 			}
 			break;
 
 		case '%':
 			*p++ = *s++;
-			// Ÿ‚Ì3•¶š‚ª0`7‚È‚ç‚Î’¼’l‚ÌFw’è
+			// æ¬¡ã®3æ–‡å­—ãŒ0ï½7ãªã‚‰ã°ç›´å€¤ã®è‰²æŒ‡å®š
 			if ((*s >= '0') && (*s <= '7') && (*(s + 1) >= '0') && (*(s + 1) <= '7') && (*(s + 2) >= '0') && (*(s + 2) <= '7'))
 			{
 				*p++ = *s++;
 				*p++ = *s++;
 				*p++ = *s++;
-				// Fw’è‚ÌŸ‚Ì•¶š‚àˆê‚Éˆ—‚·‚é
+				// è‰²æŒ‡å®šã®æ¬¡ã®æ–‡å­—ã‚‚ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 				continue;
 			}
 			break;
 
-		case '\\': // ƒGƒXƒP[ƒv‹L†
+		case 0x5C: // ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å· '\\'(shiftjis) or ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥
 			*p++ = *s++;
 			switch (*s)
 			{
 			case '$':
-				// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É$‚ª‘±‚¯‚Î’P‘Ì‚Ìs––‹Ö‘¥•¶š‚Æ‚µ‚Äˆµ‚¤
+				// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«$ãŒç¶šã‘ã°å˜ä½“ã®è¡Œæœ«ç¦å‰‡æ–‡å­—ã¨ã—ã¦æ‰±ã†
 				*p++ = *s++;
 				continue;
 
 			case '%':
-			case 0xA7: // §
-				// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É%/§‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+				// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«%ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 				*p++ = *s++;
 				break;
 
-			case 0x81:
-				if (*(s + 1) == 0x98)
+			case 0xEF: // ï½§
+				if ((*(s + 1) == 0xBD) && (*(s + 1) == 0xA7))
 				{
-					// ƒGƒXƒP[ƒv‹L†‚ÌŒã‚É˜‚ª‘±‚¯‚Î’P‘Ì‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+					// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«ï½§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+					*p++ = *s++;
 					*p++ = *s++;
 					*p++ = *s++;
 				}
 				else
 				{
-					// ’P‘Ì‚Ì\‚Ís––‹Ö‘¥•¶š‚Æ‚µ‚Äˆµ‚¤
+					// å˜ä½“ã®\ã¯è¡Œæœ«ç¦å‰‡æ–‡å­—ã¨ã—ã¦æ‰±ã†
+					continue;
+				}
+				break;
+
+			case 0xC2:
+				if (*(s + 1) == 0xA7)
+				{
+					// ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å·ã®å¾Œã«Â§ãŒç¶šã‘ã°å˜ä½“ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+					*p++ = *s++;
+					*p++ = *s++;
+				}
+				else
+				{
+					// å˜ä½“ã®\ã¯è¡Œæœ«ç¦å‰‡æ–‡å­—ã¨ã—ã¦æ‰±ã†
 					continue;
 				}
 				break;
 
 			default:
-				// ’P‘Ì‚Ì\‚Ís––‹Ö‘¥•¶š‚Æ‚µ‚Äˆµ‚¤
+				// å˜ä½“ã®\ã¯è¡Œæœ«ç¦å‰‡æ–‡å­—ã¨ã—ã¦æ‰±ã†
 				continue;
 			}
 			break;
@@ -1298,7 +1893,7 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case '-':
 		case '+':
 			*p++ = *s++;
-			// ˜A”š‚Ì•ª—£‹Ö‘¥ˆ—
+			// é€£æ•°å­—ã®åˆ†é›¢ç¦å‰‡å‡¦ç†
 			len = CalcNumberWordWrap(p, s);
 			p += len;
 			s += len;
@@ -1306,42 +1901,53 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 
 		case 0x0A:
 		case 0x0D:
-			// ‹Ö‘¥•¶š‚ÌŸ‚Ì‰üsƒR[ƒh‚Íˆ—‚µ‚È‚¢
-			// ‚±‚ê‚ğ“ü‚ê‚È‚¢‚ÆFw’è‚Ì’¼Œã‚Ì‰üs‚ªˆ—‚³‚ê‚È‚¢
+			// ç¦å‰‡æ–‡å­—ã®æ¬¡ã®æ”¹è¡Œã‚³ãƒ¼ãƒ‰ã¯å‡¦ç†ã—ãªã„
+			// ã“ã‚Œã‚’å…¥ã‚Œãªã„ã¨è‰²æŒ‡å®šã®ç›´å¾Œã®æ”¹è¡ŒãŒå‡¦ç†ã•ã‚Œãªã„
 			break;
 
-		case 0x83:
-		case 0x84:
-		case 0x85:
-		case 0x86:
-		case 0x88:
-		case 0x89:
-		case 0x8A:
-		case 0x8B:
-		case 0x8C:
-		case 0x8D:
-		case 0x8E:
-		case 0x8F:
-		case 0x90:
-		case 0x91:
-		case 0x92:
-		case 0x93:
-		case 0x94:
-		case 0x95:
-		case 0x96:
-		case 0x97:
-		case 0x98:
-		case 0x99:
-		case 0x9A:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
+		case 0xC0:
+		case 0xC1:
+		case 0xC3:
+		case 0xC4:
+		case 0xC5:
+		case 0xC6:
+		case 0xC7:
+		case 0xC8:
+		case 0xC9:
+		case 0xCA:
+		case 0xCB:
+		case 0xCC:
+		case 0xCD:
+		case 0xCE:
+		case 0xCF:
+		case 0xD0:
+		case 0xD1:
+		case 0xD2:
+		case 0xD3:
+		case 0xD4:
+		case 0xD5:
+		case 0xD6:
+		case 0xD7:
+		case 0xD8:
+		case 0xD9:
+		case 0xDA:
+		case 0xDB:
+		case 0xDC:
+		case 0xDD:
+		case 0xDE:
+		case 0xDF:
+			*p++ = *s++;
+			// UTF-8ã®2ãƒã‚¤ãƒˆæ–‡å­— (Â§ãŒã‚ã‚‹0xC2é–‹å§‹ä»¥å¤–)
+			if ((*s >= 0x80) && (*s <= 0xBF))
+			{
+				*p++ = *s++;
+				break;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			break;
+
 		case 0xE0:
 		case 0xE1:
-		case 0xE2:
-		case 0xE3:
 		case 0xE4:
 		case 0xE5:
 		case 0xE6:
@@ -1353,7 +1959,17 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0xEC:
 		case 0xED:
 		case 0xEE:
-		case 0xEF:
+			*p++ = *s++;
+			// UTF-8ã®3ãƒã‚¤ãƒˆæ–‡å­— (ç¦å‰‡æ–‡å­—ãŒã‚ã‚‹ãŒã‚ã‚‹0xE2,xE3,0xEFé–‹å§‹ä»¥å¤–)
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)))
+			{
+			*p++ = *s++;
+			*p++ = *s++;
+				break;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			break;
+
 		case 0xF0:
 		case 0xF1:
 		case 0xF2:
@@ -1362,19 +1978,49 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0xF5:
 		case 0xF6:
 		case 0xF7:
+			*p++ = *s++;
+			// UTF-8ã®4ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+				break;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			break;
+
 		case 0xF8:
 		case 0xF9:
 		case 0xFA:
 		case 0xFB:
-		case 0xFC:
 			*p++ = *s++;
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
+			// UTF-8ã®5ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
 			{
-				*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
 				break;
 			}
-			// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			break;
+
+		case 0xFC:
+		case 0xFD:
+			*p++ = *s++;
+			// UTF-8ã®6ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
+			{
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+				break;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 			break;
 
 		default:
@@ -1382,7 +2028,8 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 			break;
 		}
 
-		// s“ª‹Ö‘¥•¶š/•ª—£‹Ö‘¥•¶š‚Ìˆ—
+
+		// è¡Œé ­ç¦å‰‡æ–‡å­—/åˆ†é›¢ç¦å‰‡æ–‡å­—ã®å‡¦ç†
 		switch (*s)
 		{
 		case '!':
@@ -1400,134 +2047,204 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case ']':
 		case '}':
 		case '~':
-		case 0xA1: // ¡
-		case 0xA3: // £
-		case 0xA4: // ¤
-		case 0xA5: // ¥
-		case 0xA8: // ¨
-		case 0xA9: // ©
-		case 0xAA: // ª
-		case 0xAB: // «
-		case 0xAC: // ¬
-		case 0xAD: // ­
-		case 0xAE: // ®
-		case 0xAF: // ¯
-		case 0xB0: // °
-		case 0xDE: // Ş
-		case 0xDF: // ß
-			// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
+			// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 			continue;
 
 		case '/':
-			// Ÿ‚ª•ª—£‹Ö‘¥•¶š‚È‚ç‚Î‚»‚ÌŸ‚àŠÜ‚ß‚Äˆê‚Éˆ—‚·‚é
+			// æ¬¡ãŒåˆ†é›¢ç¦å‰‡æ–‡å­—ãªã‚‰ã°ãã®æ¬¡ã‚‚å«ã‚ã¦ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
 			*p++ = *s++;
 			continue;
 
-		case '\\':
-			// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
-			if (*(s + 1) == 0xA7) // §
+		case 0x5c: // ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å· '\\'(shiftjis) or ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥
+			// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+			if ((*(s + 1) == 0xEF) && (*(s + 2) == 0xBD) && (*(s + 3) == 0xA7)) // ï½§
 			{
 				continue;
 			}
 			break;
 
-		case 0x81:
+		case 0xC2:
 			switch (*(s + 1))
 			{
-			case 0x41: // A
-			case 0x42: // B
-			case 0x43: // C
-			case 0x44: // D
-			case 0x45: // E
-			case 0x46: // F
-			case 0x47: // G
-			case 0x48: // H
-			case 0x49: // I
-			case 0x4A: // J
-			case 0x4B: // K
-			case 0x4C: // L
-			case 0x52: // R
-			case 0x53: // S
-			case 0x54: // T
-			case 0x55: // U
-			case 0x56: // V
-			case 0x58: // X
-			case 0x5B: // [
-			case 0x5D: // ]
-			case 0x60: // `
-			case 0x66: // f
-			case 0x68: // h
-			case 0x6A: // j
-			case 0x6C: // l
-			case 0x6E: // n
-			case 0x70: // p 
-			case 0x72: // r
-			case 0x74: // t
-			case 0x76: // v
-			case 0x78: // x
-			case 0x7A: // z
-			case 0x81: // 
-			case 0x84: // „
-			case 0x8E: // 
-			case 0x91: // ‘
-			case 0x93: // “
-				// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
-				continue;
-
-			case 0x5C: // \
-			case 0x5E: // ^
-			case 0x63: // c
-			case 0x64: // d
-				// Ÿ‚ª•ª—£‹Ö‘¥•¶š‚È‚ç‚Î‚»‚ÌŸ‚àŠÜ‚ß‚Äˆê‚Éˆ—‚·‚é
-				*p++ = *s++;
-				*p++ = *s++;
-				continue;
+			case 0xB4: // Â´
+				// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
 			}
 			break;
 
-		case 0x82:
+		case 0xE2:
 			switch (*(s + 1))
 			{
-			case 0x9F: // ‚Ÿ
-			case 0xA1: // ‚¡
-			case 0xA3: // ‚£
-			case 0xA5: // ‚¥
-			case 0xA7: // ‚§
-			case 0xC1: // ‚Á
-			case 0xE1: // ‚á
-			case 0xE3: // ‚ã
-			case 0xE5: // ‚å
-			case 0xEC: // ‚ì
-				// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
-				continue;
+			case 0x80:
+				switch (*(s + 2))
+				{
+				case 0x99: // â€™
+				case 0x9D: // â€
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				case 0x95: // â€•
+				case 0xA6: // â€¦
+				case 0xA5: // â€¥
+					// æ¬¡ãŒåˆ†é›¢ç¦å‰‡æ–‡å­—ãªã‚‰ã°ãã®æ¬¡ã‚‚å«ã‚ã¦ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				}
+				break;
+			case 0x84:
+				switch (*(s + 2))
+				{
+				case 0xB3: // â„ƒ
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
 			}
 			break;
 
-		case 0x83:
+		case 0xE3:
 			switch (*(s + 1))
 			{
-			case 0x40: // ƒ@
-			case 0x42: // ƒB
-			case 0x44: // ƒD
-			case 0x46: // ƒF
-			case 0x48: // ƒH
-			case 0x62: // ƒb
-			case 0x83: // ƒƒ
-			case 0x85: // ƒ…
-			case 0x87: // ƒ‡
-			case 0x8E: // ƒ
-			case 0x95: // ƒ•
-			case 0x96: // ƒ–
-				// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
-				continue;
+			case 0x80:
+				switch (*(s + 2))
+				{
+				case 0x81: // ã€
+				case 0x82: // ã€‚
+				case 0x83: // ã€ƒ
+				case 0x85: // ã€…
+				case 0x90: // â€
+				case 0x95: // ã€•
+				case 0x89: // ã€‰
+				case 0x8B: // ã€‹
+				case 0x8D: // ã€
+				case 0x8F: // ã€
+				case 0x91: // ã€‘
+				case 0x9F: // ã€Ÿ
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
+			case 0x81:
+				switch (*(s + 2))
+				{
+				case 0x81: // ã
+				case 0x83: // ãƒ
+				case 0x85: // ã…
+				case 0x87: // ã‡
+				case 0x89: // ã‰
+				case 0xA3: // ã£
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
+			case 0x82:
+				switch (*(s + 2))
+				{
+				case 0x9B: // ã‚›
+				case 0x9C: // ã‚œ
+				case 0x9D: // ã‚
+				case 0x9E: // ã‚
+				case 0x83: // ã‚ƒ
+				case 0x85: // ã‚…
+				case 0x87: // ã‚‡
+				case 0x8E: // ã‚
+				case 0xA1: // ã‚¡
+				case 0xA3: // ã‚£
+				case 0xA5: // ã‚¥
+				case 0xA7: // ã‚§
+				case 0xA9: // ã‚©
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
+			case 0x83:
+				switch (*(s + 2))
+				{
+				case 0xBB: // ãƒ»
+				case 0xBD: // ãƒ½
+				case 0xBE: // ãƒ¾
+				case 0xBC: // ãƒ¼
+				case 0x83: // ãƒƒ
+				case 0xA3: // ãƒ£
+				case 0xA5: // ãƒ¥
+				case 0xA7: // ãƒ§
+				case 0xAE: // ãƒ®
+				case 0xB5: // ãƒµ
+				case 0xB6: // ãƒ¶
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
 			}
 			break;
 
-		case 0x87:
-			if (*(s + 1) == 0x81) // ‡
+		case 0xEF:
+			switch (*(s + 1))
 			{
-				// Ÿ‚ªs“ª‹Ö‘¥•¶š‚È‚ç‚Îˆê‚Éˆ—‚·‚é
-				continue;
+			case 0xBC:
+				switch (*(s + 2))
+				{
+				case 0x8C: // ï¼Œ
+				case 0x8E: // ï¼
+				case 0x9A: // ï¼š
+				case 0x9B: // ï¼›
+				case 0x9F: // ï¼Ÿ
+				case 0x81: // ï¼
+				case 0x89: // ï¼‰
+				case 0xBD: // ï¼½
+				case 0x9D: // ï¼
+				case 0x9E: // ï¼
+				case 0x85: // ï¼…
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				case 0x8F: // ï¼
+					// æ¬¡ãŒåˆ†é›¢ç¦å‰‡æ–‡å­—ãªã‚‰ã°ãã®æ¬¡ã‚‚å«ã‚ã¦ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				}
+				break;
+			case 0xBD:
+				switch (*(s + 2))
+				{
+				case 0xA1: // ï½¡
+				case 0xA3: // ï½£
+				case 0xA4: // ï½¤
+				case 0xA5: // ï½¥
+				case 0xA8: // ï½¨
+				case 0xA9: // ï½©
+				case 0xAA: // ï½ª
+				case 0xAB: // ï½«
+				case 0xAC: // ï½¬
+				case 0xAD: // ï½­
+				case 0xAE: // ï½®
+				case 0xAF: // ï½¯
+				case 0xB0: // ï½°
+				case 0x9E: // ï½
+				case 0x9D: // ï½ 
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
+			case 0xBE:
+				switch (*(s + 2))
+				{
+				case 0x9E: // ï¾
+				case 0x9F: // ï¾Ÿ
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
+			case 0xBF:
+				switch (*(s + 2))
+				{
+				case 0xA0: // ï¿ 
+					// æ¬¡ãŒè¡Œé ­ç¦å‰‡æ–‡å­—ãªã‚‰ã°ä¸€ç·’ã«å‡¦ç†ã™ã‚‹
+					continue;
+				}
+				break;
 			}
 			break;
 		}
@@ -1547,13 +2264,13 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 }
 
 //
-// Fw’èŒã‚Ì•ª—£‹Ö‘¥‚ğŒvZ‚·‚é
+// è‰²æŒ‡å®šå¾Œã®åˆ†é›¢ç¦å‰‡ã‚’è¨ˆç®—ã™ã‚‹
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpBuffer		•¶š—ñˆ—ƒoƒbƒtƒ@
-//   lpString		‘ÎÛ•¶š—ñ
-// –ß‚è’l
-//   ˆ—‚µ‚½ƒoƒCƒg”
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpBuffer		æ–‡å­—åˆ—å‡¦ç†ãƒãƒƒãƒ•ã‚¡
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+// æˆ»ã‚Šå€¤
+//   å‡¦ç†ã—ãŸãƒã‚¤ãƒˆæ•°
 //
 int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 {
@@ -1562,15 +2279,15 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 
 	while (*s != '\0')
 	{
-		// ’PŒê“à‚ÌÅ‘å•\¦‰Â”\•¶š”‚ğ’´‚¦‚éê‡‚»‚Ìê‚Å‹æØ‚é(•ÛŒ¯)
+		// å˜èªå†…ã®æœ€å¤§è¡¨ç¤ºå¯èƒ½æ–‡å­—æ•°ã‚’è¶…ãˆã‚‹å ´åˆãã®å ´ã§åŒºåˆ‡ã‚‹(ä¿é™º)
 		if (p - lpBuffer > nMaxWordChars)
 		{
 			break;
 		}
 		switch (*s)
 		{
-		case 0xA7: // §
-			// Fw’è‚Ì’¼‘O‚Å‹æØ‚é
+		case 0xA7: // ï½§
+			// è‰²æŒ‡å®šã®ç›´å‰ã§åŒºåˆ‡ã‚‹
 			if ((*(s + 1) >= 'A') && (*(s + 1) <= 'Z'))
 			{
 				break;
@@ -1579,68 +2296,107 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 			{
 				break;
 			}
-			// Fw’è‚Å‚È‚¯‚ê‚Î’Êí‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+			// è‰²æŒ‡å®šã§ãªã‘ã‚Œã°é€šå¸¸ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 			*p++ = *s++;
 			continue;
 
-		case 0x81:
-			// ˜
-			if (*(s + 1) == 0x98)
+		case 0xC2:
+			if (*(s + 1) == 0xA7) // Â§
 			{
-				// Fw’è‚Ì’¼‘O‚Å‹æØ‚é
+				// è‰²æŒ‡å®šã®ç›´å‰ã§åŒºåˆ‡ã‚‹
 				if ((*(s + 2) >= 'A') && (*(s + 2) <= 'Z'))
 				{
 					break;
 				}
-				if ((*(s + 2) == 0x81) && (*(s + 3) == 0x98))
+				if ((*(s + 2) == 0xC2) && (*(s + 3) == 0xA7))
 				{
 					break;
 				}
-				// Fw’è‚Å‚È‚¯‚ê‚Î’Êí‚Ì•¶š‚Æ‚µ‚Äˆµ‚¤
+				// è‰²æŒ‡å®šã§ãªã‘ã‚Œã°é€šå¸¸ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
 				*p++ = *s++;
 				*p++ = *s++;
 				continue;
 			}
 			*p++ = *s++;
-			// SHIFT_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
+			// UTF-8ã®2ãƒã‚¤ãƒˆç›®
+			if ((*s >= 0x81) && (*s <= 0xBF))
 			{
 				*p++ = *s++;
 				continue;
 			}
-			// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 			continue;
 
-		case 0x82:
-		case 0x83:
-		case 0x84:
-		case 0x85:
-		case 0x86:
-		case 0x87:
-		case 0x88:
-		case 0x89:
-		case 0x8A:
-		case 0x8B:
-		case 0x8C:
-		case 0x8D:
-		case 0x8E:
-		case 0x8F:
-		case 0x90:
-		case 0x91:
-		case 0x92:
-		case 0x93:
-		case 0x94:
-		case 0x95:
-		case 0x96:
-		case 0x97:
-		case 0x98:
-		case 0x99:
-		case 0x9A:
-		case 0x9B:
-		case 0x9C:
-		case 0x9D:
-		case 0x9E:
-		case 0x9F:
+		case 0xEF: // ï½§
+			// è‰²æŒ‡å®šã®ç›´å‰ã§åŒºåˆ‡ã‚‹
+			if ((*(s + 1) == 0xBD) && (*(s + 2) == 0xA7))
+			{
+				if ((*(s + 3) >= 'A') && (*(s + 3) <= 'Z'))
+				{
+					break;
+				}
+				if ((*(s + 3) == 0xA7) && (*(s + 4) == 0xBD) && (*(s + 5) == 0xA7))
+				{
+					break;
+				}
+				// è‰²æŒ‡å®šã§ãªã‘ã‚Œã°é€šå¸¸ã®æ–‡å­—ã¨ã—ã¦æ‰±ã†
+				*p++ = *s++;
+				*p++ = *s++;
+				*p++ = *s++;
+				continue;
+			}
+			*p++ = *s++;
+			// UTF-8ã®2-3ãƒã‚¤ãƒˆç›®
+			if (((*s >= 0x81) && (*s <= 0xBF)) && ((*(s+1) >= 0x81) && (*(s+1) <= 0xBF)))
+			{
+				*p++ = *s++;
+				*p++ = *s++;
+				continue;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			continue;
+
+		case 0xC0:
+		case 0xC1:
+		case 0xC3:
+		case 0xC4:
+		case 0xC5:
+		case 0xC6:
+		case 0xC7:
+		case 0xC8:
+		case 0xC9:
+		case 0xCA:
+		case 0xCB:
+		case 0xCC:
+		case 0xCD:
+		case 0xCE:
+		case 0xCF:
+		case 0xD0:
+		case 0xD1:
+		case 0xD2:
+		case 0xD3:
+		case 0xD4:
+		case 0xD5:
+		case 0xD6:
+		case 0xD7:
+		case 0xD8:
+		case 0xD9:
+		case 0xDA:
+		case 0xDB:
+		case 0xDC:
+		case 0xDD:
+		case 0xDE:
+		case 0xDF:
+			*p++ = *s++;
+			// UTF-8ã®2ãƒã‚¤ãƒˆæ–‡å­— (Â§ãŒã‚ã‚‹0xC2é–‹å§‹ä»¥å¤–)
+			if ((*s >= 0x80) && (*s <= 0xBF))
+			{
+				*p++ = *s++;
+				continue;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			continue;
+
 		case 0xE0:
 		case 0xE1:
 		case 0xE2:
@@ -1656,7 +2412,17 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0xEC:
 		case 0xED:
 		case 0xEE:
-		case 0xEF:
+			*p++ = *s++;
+			// UTF-8ã®3ãƒã‚¤ãƒˆæ–‡å­— (ï½§ãŒã‚ã‚‹0xEFé–‹å§‹ä»¥å¤–)
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)))
+			{
+				*p++ = *s++;
+				*p++ = *s++;
+				continue;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			continue;
+
 		case 0xF0:
 		case 0xF1:
 		case 0xF2:
@@ -1665,19 +2431,49 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0xF5:
 		case 0xF6:
 		case 0xF7:
+			*p++ = *s++;
+			// UTF-8ã®4ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+				continue;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			continue;
+
 		case 0xF8:
 		case 0xF9:
 		case 0xFA:
 		case 0xFB:
-		case 0xFC:
 			*p++ = *s++;
-			// SHIFT_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*s >= 0x40) && (*s <= 0x7E)) || ((*s >= 0x80) && (*s <= 0xFC)))
+			// UTF-8ã®5ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
 			{
-				*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
 				continue;
 			}
-			// •s–¾‚È•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
+			continue;
+
+		case 0xFC:
+		case 0xFD:
+			*p++ = *s++;
+			// UTF-8ã®6ãƒã‚¤ãƒˆæ–‡å­—
+			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
+			{
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+			*p++ = *s++;
+				continue;
+			}
+			// ä¸æ˜ãªæ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 			continue;
 
 		case 0x01:
@@ -1711,7 +2507,7 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0x1D:
 		case 0x1E:
 		case 0x1F:
-			// §Œä•¶š‚ª‚ ‚ê‚Î’¼‘O‚Å‹æØ‚é
+			// åˆ¶å¾¡æ–‡å­—ãŒã‚ã‚Œã°ç›´å‰ã§åŒºåˆ‡ã‚‹
 			break;
 
 		default:
@@ -1732,13 +2528,13 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 }
 
 //
-// ˜A”š‚Ì•ª—£‹Ö‘¥‚ğŒvZ‚·‚é
+// é€£æ•°å­—ã®åˆ†é›¢ç¦å‰‡ã‚’è¨ˆç®—ã™ã‚‹
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpBuffer		•¶š—ñˆ—ƒoƒbƒtƒ@
-//   lpString		‘ÎÛ•¶š—ñ
-// –ß‚è’l
-//   ˆ—‚µ‚½ƒoƒCƒg”
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpBuffer		æ–‡å­—åˆ—å‡¦ç†ãƒãƒƒãƒ•ã‚¡
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+// æˆ»ã‚Šå€¤
+//   å‡¦ç†ã—ãŸãƒã‚¤ãƒˆæ•°
 //
 int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 {
@@ -1747,7 +2543,7 @@ int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 
 	while (*s != '\0')
 	{
-		// ’PŒê“à‚ÌÅ‘å•\¦‰Â”\•¶š”‚ğ’´‚¦‚éê‡‚»‚Ìê‚Å‹æØ‚é(•ÛŒ¯)
+		// å˜èªå†…ã®æœ€å¤§è¡¨ç¤ºå¯èƒ½æ–‡å­—æ•°ã‚’è¶…ãˆã‚‹å ´åˆãã®å ´ã§åŒºåˆ‡ã‚‹(ä¿é™º)
 		if (p - lpBuffer > nMaxWordChars)
 		{
 			break;
@@ -1766,51 +2562,69 @@ int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case '9':
 		case ',':
 		case '.':
-			// ”š‚Ü‚½‚Í”š‚ğ\¬‚·‚é‹L†‚È‚ç‚Î‘±‚¯‚Äˆ—‚·‚é
+			// æ•°å­—ã¾ãŸã¯æ•°å­—ã‚’æ§‹æˆã™ã‚‹è¨˜å·ãªã‚‰ã°ç¶šã‘ã¦å‡¦ç†ã™ã‚‹
 			*p++ = *s++;
 			continue;
 
 		case '%':
 			if ((*(s + 1) < '0') || (*(s + 1) > '9') || (*(s + 2) < '0') || (*(s + 2) > '9') || (*(s + 3) < '0') || (*(s + 3) > '9'))
 			{
-				// ”š‚ÌŒã‚ë‚Ì%‚Í‚Ü‚Æ‚ß‚Äˆ—‚·‚é
+				// æ•°å­—ã®å¾Œã‚ã®%ã¯ã¾ã¨ã‚ã¦å‡¦ç†ã™ã‚‹
 				*p++ = *s;
 			}
 			break;
 
-		case '\\':
+		case 0x5C: // ã‚¨ã‚¹ã‚±ãƒ¼ãƒ—è¨˜å· '\\'(shiftjis) or ãƒãƒƒã‚¯ã‚¹ãƒ©ãƒƒã‚·ãƒ¥
 			if (*(s + 1) == '%')
 			{
-				// ”š‚ÌŒã‚ë‚Ì%‚Í‚Ü‚Æ‚ß‚Äˆ—‚·‚é
+				// æ•°å­—ã®å¾Œã‚ã®%ã¯ã¾ã¨ã‚ã¦å‡¦ç†ã™ã‚‹
 				*p++ = *s++;
 				*p++ = *s;
 			}
 			break;
 
-		case 0x81:
+		case 0xEF:
 			switch (*(s + 1))
 			{
-			case 0x43: // C
-			case 0x44: // D
-				*p++ = *s++;
-				*p++ = *s++;
-				continue;
-
-			case 0x93: // “
-				// ”š‚ÌŒã‚ë‚Ì%‚Í‚Ü‚Æ‚ß‚Äˆ—‚·‚é
-				*p++ = *s++;
-				*p++ = *s;
+			case 0xBD:
+				switch (*(s + 2))
+				{
+				case 0x8C: // ï¼Œ
+				case 0x8E: // ï¼
+					*p++ = *s++;
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				}
 				break;
-			}
-			break;
 
-		case 0x82:
-			// 2ƒoƒCƒg”š
-			if ((*(s + 1) >= 0x16) && (*(s + 1) <= 0x25))
-			{
-				*p++ = *s++;
-				*p++ = *s++;
-				continue;
+			case 0xBC:
+				switch (*(s + 2))
+				{
+				case 0x85: // ï¼…
+					// æ•°å­—ã®å¾Œã‚ã®%ã¯ã¾ã¨ã‚ã¦å‡¦ç†ã™ã‚‹
+					*p++ = *s++;
+					*p++ = *s++;
+					*p++ = *s;
+					break;
+
+				case 0x90: // ï¼
+				case 0x91: // ï¼‘
+				case 0x92: // ï¼’
+				case 0x93: // ï¼“
+				case 0x94: // ï¼”
+				case 0x95: // ï¼•
+				case 0x96: // ï¼–
+				case 0x97: // ï¼—
+				case 0x98: // ï¼˜
+				case 0x99: // ï¼™
+					// 2ãƒã‚¤ãƒˆæ•°å­—
+					*p++ = *s++;
+					*p++ = *s++;
+					*p++ = *s++;
+					continue;
+				}
+				break;
 			}
 			break;
 		}
@@ -1828,13 +2642,13 @@ int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 }
 
 //
-// •¶š—ñ’·‚ğæ“¾‚·‚é(Å‘åw’è‚ ‚è)
+// æ–‡å­—åˆ—é•·ã‚’å–å¾—ã™ã‚‹(æœ€å¤§æŒ‡å®šã‚ã‚Š)
 //
-// ƒpƒ‰ƒ[ƒ^
-//   lpString		‘ÎÛ•¶š—ñ
-//   nMax			Å‘å•¶š—ñ’·
-// –ß‚è’l
-//   •¶š—ñ’·
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   lpString		å¯¾è±¡æ–‡å­—åˆ—
+//   nMax			æœ€å¤§æ–‡å­—åˆ—é•·
+// æˆ»ã‚Šå€¤
+//   æ–‡å­—åˆ—é•·
 //
 int WINAPI strnlen0(LPCBYTE lpString, int nMax)
 {
@@ -1847,11 +2661,11 @@ int WINAPI strnlen0(LPCBYTE lpString, int nMax)
 	int len = 0;
 	while (*s != '\0')
 	{
-		// Shift_JIS‚Ì1ƒoƒCƒg–Ú
-		if (((*s >= 0x81) && (*s <= 0x9F)) || ((*s >= 0xE0) && (*s <= 0xFC)))
+		// 2ãƒã‚¤ãƒˆUtf-8ã®1ãƒã‚¤ãƒˆç›®
+		if ((*s >= 0xC0) && (*s <= 0xDF))
 		{
-			// Shift_JIS‚Ì2ƒoƒCƒg–Ú
-			if (((*(s + 1) >= 0x40) && (*(s + 1) <= 0x7E)) || ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xFC)))
+			// 2ãƒã‚¤ãƒˆUtf-8ã®2ãƒã‚¤ãƒˆç›®
+			if ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF))
 			{
 				if (len + 1 >= nMax)
 				{
@@ -1862,7 +2676,72 @@ int WINAPI strnlen0(LPCBYTE lpString, int nMax)
 				continue;
 			}
 		}
-		// ‚»‚êˆÈŠO‚Ì•¶š‚Í1ƒoƒCƒg•¶š‚Æ‚µ‚Äˆ—‚·‚é
+
+		// 3ãƒã‚¤ãƒˆUtf-8ã®1ãƒã‚¤ãƒˆç›®
+		if ((*s >= 0xE0) && (*s <= 0xEF))
+		{
+			// 3ãƒã‚¤ãƒˆUtf-8ã®2-3ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+			{
+				if (len + 1 >= nMax)
+				{
+					break;
+				}
+				s += 3;
+				len += 3;
+				continue;
+			}
+		}
+
+		// 4ãƒã‚¤ãƒˆUtf-8ã®1ãƒã‚¤ãƒˆç›®
+		if ((*s >= 0xF0) && (*s <= 0xF7))
+		{
+			// 4ãƒã‚¤ãƒˆUtf-8ã®2-4ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
+			{
+				if (len + 1 >= nMax)
+				{
+					break;
+				}
+				s += 4;
+				len += 4;
+				continue;
+			}
+		}
+
+		// 5ãƒã‚¤ãƒˆUtf-8ã®1ãƒã‚¤ãƒˆç›®
+		if ((*s >= 0xF8) && (*s <= 0xFB))
+		{
+			// 5ãƒã‚¤ãƒˆUtf-8ã®2-5ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
+			{
+				if (len + 1 >= nMax)
+				{
+					break;
+				}
+				s += 5;
+				len += 5;
+				continue;
+			}
+		}
+
+		// 6ãƒã‚¤ãƒˆUtf-8ã®1ãƒã‚¤ãƒˆç›®
+		if ((*s >= 0xFC) && (*s <= 0xFD))
+		{
+			// 6ãƒã‚¤ãƒˆUtf-8ã®2-6ãƒã‚¤ãƒˆç›®
+			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
+			{
+				if (len + 1 >= nMax)
+				{
+					break;
+				}
+				s += 6;
+				len += 6;
+				continue;
+			}
+		}
+
+		// ãã‚Œä»¥å¤–ã®æ–‡å­—ã¯1ãƒã‚¤ãƒˆæ–‡å­—ã¨ã—ã¦å‡¦ç†ã™ã‚‹
 		if (len >= nMax)
 		{
 			break;
@@ -1878,48 +2757,48 @@ int WINAPI strnlen0(LPCBYTE lpString, int nMax)
 	return len;
 }
 
-// winmm.dll‚ÌmciSendCommand API‚Ö“]‘—
+// winmm.dllã®mciSendCommand APIã¸è»¢é€
 MCIERROR WINAPI _mciSendCommandA(MCIDEVICEID IDDevice, UINT uMsg, DWORD fdwCommand, DWORD dwParam)
 {
 	return lpfnMciSendCommandA(IDDevice, uMsg, fdwCommand, dwParam);
 }
 
-// winmm.dll‚ÌtimeBeginPeriod API‚Ö“]‘—
+// winmm.dllã®timeBeginPeriod APIã¸è»¢é€
 MMRESULT WINAPI _timeBeginPeriod(UINT uPeriod)
 {
 	return lpfnTimeBeginPeriod(uPeriod);
 }
 
-// winmm.dll‚ÌtimeGetDevCaps API‚Ö“]‘—
+// winmm.dllã®timeGetDevCaps APIã¸è»¢é€
 MMRESULT WINAPI _timeGetDevCaps(LPTIMECAPS ptc, UINT cbtc)
 {
 	return lpfnTimeGetDevCaps(ptc, cbtc);
 }
 
-// winmm.dll‚ÌtimeGetTime API‚Ö“]‘—
+// winmm.dllã®timeGetTime APIã¸è»¢é€
 DWORD WINAPI _timeGetTime(VOID)
 {
 	return lpfnTimeGetTime();
 }
 
-// winmm.dll‚ÌtimeKillEvent API‚Ö“]‘—
+// winmm.dllã®timeKillEvent APIã¸è»¢é€
 MMRESULT WINAPI _timeKillEvent(UINT uTimerID)
 {
 	return lpfnTimeKillEvent(uTimerID);
 }
 
-// winmm.dll‚ÌtimeSetEvent API‚Ö“]‘—
+// winmm.dllã®timeSetEvent APIã¸è»¢é€
 MMRESULT WINAPI _timeSetEvent(UINT uDelay, UINT uResolution, LPTIMECALLBACK lpTimeProc, DWORD dwUser, UINT fuEvent)
 {
 	return lpfnTimeSetEvent(uDelay, uResolution, lpTimeProc, dwUser, fuEvent);
 }
 
 //
-// ‰Šú‰»ˆ—
+// åˆæœŸåŒ–å‡¦ç†
 //
 void Init()
 {
-	// winmm.dll‚ÌAPI“]‘—ŠÖ”‚ğİ’è‚·‚é
+	// winmm.dllã®APIè»¢é€é–¢æ•°ã‚’è¨­å®šã™ã‚‹
 	hWinMmDll = LoadLibrary("winmm.dll");
 	lpfnMciSendCommandA = (LPFNMCISENDCOMMANDA)GetProcAddress(hWinMmDll, "mciSendCommandA");
 	lpfnTimeBeginPeriod = (LPFNTIMEBEGINPERIOD)GetProcAddress(hWinMmDll, "timeBeginPeriod");
@@ -1942,37 +2821,37 @@ void Init()
 }
 
 //
-// iniƒtƒ@ƒCƒ‹‚©‚çİ’è‚ğ“Ç‚İ‚Ş
+// iniãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰è¨­å®šã‚’èª­ã¿è¾¼ã‚€
 //
 void LoadIniFile()
 {
-	// iniƒtƒ@ƒCƒ‹–¼‚ğİ’è‚·‚é
+	// iniãƒ•ã‚¡ã‚¤ãƒ«åã‚’è¨­å®šã™ã‚‹
 	char szIniFileName[MAX_PATH];
 	GetCurrentDirectory(MAX_PATH, szIniFileName);
 	lstrcat(szIniFileName, "\\_inmm.ini");
 
-	// iniƒtƒ@ƒCƒ‹‚ğŠJ‚­
+	// iniãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‹ã
 	HANDLE hIniFile = CreateFile(szIniFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (hIniFile == NULL)
 	{
 		return;
 	}
 
-	// iniƒtƒ@ƒCƒ‹‚ÌƒTƒCƒY‚ğæ“¾‚·‚é
+	// iniãƒ•ã‚¡ã‚¤ãƒ«ã®ã‚µã‚¤ã‚ºã‚’å–å¾—ã™ã‚‹
 	DWORD dwIniFileSize = GetFileSize(hIniFile, NULL);
 	if (dwIniFileSize == 0xFFFFFFFF)
 	{
 		return;
 	}
 
-	// iniƒtƒ@ƒCƒ‹“Ç‚İ‚İ—p‚Ìƒoƒbƒtƒ@‚ğŠm•Û‚·‚é
+	// iniãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿ç”¨ã®ãƒãƒƒãƒ•ã‚¡ã‚’ç¢ºä¿ã™ã‚‹
 	char *lpszIniFileBuf = (char *)HeapAlloc(GetProcessHeap(), 0, dwIniFileSize + 1);
 	if (lpszIniFileBuf == NULL)
 	{
 		return;
 	}
 
-	// iniƒtƒ@ƒCƒ‹‚Ì“à—e‚ğ“Ç‚İ‚Ş
+	// iniãƒ•ã‚¡ã‚¤ãƒ«ã®å†…å®¹ã‚’èª­ã¿è¾¼ã‚€
 	DWORD dwReadSize;
 	if (ReadFile(hIniFile, lpszIniFileBuf, dwIniFileSize, &dwReadSize, NULL) == FALSE || dwReadSize != dwIniFileSize)
 	{
@@ -1980,7 +2859,7 @@ void LoadIniFile()
 	}
 	lpszIniFileBuf[dwIniFileSize] = '\0';
 
-	// iniƒtƒ@ƒCƒ‹‚ğ•Â‚¶‚é
+	// iniãƒ•ã‚¡ã‚¤ãƒ«ã‚’é–‰ã˜ã‚‹
 	CloseHandle(hIniFile);
 
 	const int nLineBufSize = 512;
@@ -1997,7 +2876,7 @@ void LoadIniFile()
 		int len = ReadLine(p, szLineBuf, nLineBufSize);
 		p += len;
 		char *r = szLineBuf;
-		// ‹ós/ƒRƒƒ“ƒgs/ƒZƒNƒVƒ‡ƒ“s‚Í“Ç‚İ”ò‚Î‚·
+		// ç©ºè¡Œ/ã‚³ãƒ¡ãƒ³ãƒˆè¡Œ/ã‚»ã‚¯ã‚·ãƒ§ãƒ³è¡Œã¯èª­ã¿é£›ã°ã™
 		if ((*r == '\0') || (*r == '#') || (*r == '['))
 		{
 			continue;
@@ -2007,13 +2886,13 @@ void LoadIniFile()
 		{
 			s++;
 		}
-		// ’è‹`s‚ÌŒ`®‚Å‚È‚¢ê‡‚Í–³‹‚·‚é
+		// å®šç¾©è¡Œã®å½¢å¼ã§ãªã„å ´åˆã¯ç„¡è¦–ã™ã‚‹
 		if (*s == '\0')
 		{
 			continue;
 		}
 		*s++ = '\0';
-		// Fw’è
+		// è‰²æŒ‡å®š
 		if ((*r == 'C') && (*(r + 1) == 'o') && (*(r + 2) == 'l') && (*(r + 3) == 'o') && (*(r + 4) == 'r') &&
 			(*(r + 5) >= 'A') && (*(r + 5) <= 'Z') && (*s == '$'))
 		{
@@ -2076,12 +2955,12 @@ void LoadIniFile()
 		}
 	}
 	
-	// iniƒtƒ@ƒCƒ‹“Ç‚İ‚İ—p‚Ìƒoƒbƒtƒ@‚ğ‰ğ•ú‚·‚é
+	// iniãƒ•ã‚¡ã‚¤ãƒ«èª­ã¿è¾¼ã¿ç”¨ã®ãƒãƒƒãƒ•ã‚¡ã‚’è§£æ”¾ã™ã‚‹
 	HeapFree(GetProcessHeap(), 0, lpszIniFileBuf);
 }
 
 //
-// ƒtƒHƒ“ƒg‚Ì‰Šú‰»
+// ãƒ•ã‚©ãƒ³ãƒˆã®åˆæœŸåŒ–
 //
 void InitFont()
 {
@@ -2124,7 +3003,7 @@ void InitFont()
 }
 
 //
-// ƒtƒHƒ“ƒg‚Ì‰Šú’lİ’è
+// ãƒ•ã‚©ãƒ³ãƒˆã®åˆæœŸå€¤è¨­å®š
 //
 void SetFontDefault()
 {
@@ -2153,7 +3032,7 @@ void SetFontDefault()
 	fontTable[11].nHeight = 12;
 
 	// eurostilecond14bold
-	lstrcpy(fontTable[10].szFaceName, "‚l‚r ‚oƒSƒVƒbƒN");
+	lstrcpy(fontTable[10].szFaceName, "ï¼­ï¼³ ï¼°ã‚´ã‚·ãƒƒã‚¯");
 	fontTable[10].nHeight = 12;
 
 	// eurostilecond18bold
@@ -2163,18 +3042,18 @@ void SetFontDefault()
 	fontTable[14].nAdjustY= 1;
 
 	// eurostilecond20bold
-	lstrcpy(fontTable[16].szFaceName, "‚l‚r ‚oƒSƒVƒbƒN");
+	lstrcpy(fontTable[16].szFaceName, "ï¼­ï¼³ ï¼°ã‚´ã‚·ãƒƒã‚¯");
 	fontTable[16].nHeight = 12;
 	fontTable[16].nAdjustY = 1;
 
 	// eurostilecond24bold
-	lstrcpy(fontTable[20].szFaceName, "‚l‚r ‚oƒSƒVƒbƒN");
+	lstrcpy(fontTable[20].szFaceName, "ï¼­ï¼³ ï¼°ã‚´ã‚·ãƒƒã‚¯");
 	fontTable[20].nHeight = 12;
 	fontTable[20].nAdjustY = 1;
 }
 
 //
-// ƒpƒŒƒbƒg‚Ì‰Šú‰»
+// ãƒ‘ãƒ¬ãƒƒãƒˆã®åˆæœŸåŒ–
 //
 void InitPalette()
 {
@@ -2195,7 +3074,7 @@ void InitPalette()
 }
 
 //
-// ƒRƒCƒ“‰æ‘œ‚Ì‰Šú‰»
+// ã‚³ã‚¤ãƒ³ç”»åƒã®åˆæœŸåŒ–
 //
 void InitCoinImage()
 {
@@ -2209,7 +3088,7 @@ void InitCoinImage()
 }
 
 //
-// I—¹ˆ—
+// çµ‚äº†å‡¦ç†
 //
 void Terminate()
 {
@@ -2232,14 +3111,14 @@ void Terminate()
 }
 
 //
-// 1s‚ğƒoƒbƒtƒ@‚É“Ç‚İ‚Ş
+// 1è¡Œã‚’ãƒãƒƒãƒ•ã‚¡ã«èª­ã¿è¾¼ã‚€
 //
-// ƒpƒ‰ƒ[ƒ^
-//   p				•¶š—ñƒ|ƒCƒ“ƒ^
-//   buf			•¶š—ñƒoƒbƒtƒ@
-//   len			•¶š—ñƒoƒbƒtƒ@‚ÌÅ‘å’·
-// –ß‚è’l
-//   1s‚ÌƒTƒCƒY
+// ãƒ‘ãƒ©ãƒ¡ãƒ¼ã‚¿
+//   p				æ–‡å­—åˆ—ãƒã‚¤ãƒ³ã‚¿
+//   buf			æ–‡å­—åˆ—ãƒãƒƒãƒ•ã‚¡
+//   len			æ–‡å­—åˆ—ãƒãƒƒãƒ•ã‚¡ã®æœ€å¤§é•·
+// æˆ»ã‚Šå€¤
+//   1è¡Œã®ã‚µã‚¤ã‚º
 //
 int ReadLine(char *p, char *buf, int len)
 {
