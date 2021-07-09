@@ -118,7 +118,7 @@ static int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode);
 static void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC hDC, int nMagicCode, COLORREF color, DWORD dwFlags);
 static void ShowCoinImage(LPPOINT lpPoint, HDC hDC);
 static int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString);
-static int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString);
+static int CalcAlphanumericWordWrap(LPBYTE lpBuffer, LPCBYTE lpString);
 static void Init();
 static void SetFontDefault();
 static void LoadIniFile();
@@ -128,8 +128,7 @@ static void InitCoinImage();
 static void Terminate();
 static int ReadLine(char *p, char *buf, int len);
 //
-static void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringword);
-static void CharUtf32toUtf16(LPDWORD lpStringdw, LPWORD stringword);
+static int CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringword);
 static int Utf8CharLength(LPCBYTE utf8headbyte);
 static bool Utf8Laterbytecheck(LPCBYTE utf8laterbyte);
 
@@ -218,6 +217,17 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 		nMagicCode = 0;
 	}
 	HFONT hFontOld = (HFONT)SelectObject(hDesktopDC, fontTable[nMagicCode].hFont);
+
+	// 先頭の連続したスペースは1文字を残して省略して計算する
+	if  (*s == 0x20)
+	{
+		nWidth += GetTextWidthWord(p, 1, nMagicCode);
+	}
+	while (*s == 0x20)
+	{
+		s++;
+		p=s;
+	}
 
 	while (*s != '\0')
 	{
@@ -581,32 +591,6 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 			s++;
 			continue;
 
-		case 0xF8:
-		case 0xF9:
-		case 0xFA:
-		case 0xFB:
-			// UTF-8の5バイト文字
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
-			{
-				s += 5;
-				continue;
-			}
-			// それ以外ならば単体の文字として扱う
-			s++;
-			continue;
-
-		case 0xFC:
-		case 0xFD:
-			// UTF-8の6バイト文字
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
-			{
-				s += 6;
-				continue;
-			}
-			// それ以外ならば単体の文字として扱う
-			s++;
-			continue;
-
 		default:
 			// それ以外ならば単体の文字として扱う
 			s++;
@@ -664,8 +648,7 @@ int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode)
 
 	while (u8wordlength < nLen)
 	{
-		u8charlength = Utf8CharLength(s);
-		CharUtf8toUtf32(s, &u32chr);
+		u8charlength = CharUtf8toUtf32(s, &u32chr);
 		
 		//不明文字なら処理を中断する
 		if (u32chr == 0)
@@ -688,8 +671,8 @@ int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode)
 		}
 		else
 		{
-			p[i++] = WORD((u32chr - 0x10000) / 0x400 + 0xD800);
-			p[i++] = WORD((u32chr - 0x10000) % 0x400 + 0xDC00);
+			p[i++] = WORD(((u32chr - 0x10000) >> 10) + 0xD800);
+			p[i++] = WORD(((u32chr - 0x10000) & 0x3FF) + 0xDC00);
 		}
 	}
 
@@ -788,6 +771,13 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 	HFONT hFontOld = (HFONT)SelectObject(hDC, fontTable[nMagicCode].hFont);
 
 	POINT pt = { *px, *py };
+
+	// 先頭のスペースは省略する
+	while (*s == 0x20)
+	{
+		s++;
+		p = s;
+	}
 
 	while (*s != '\0')
 	{
@@ -1166,32 +1156,6 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 			s++;
 			continue;
 
-		case 0xF8:
-		case 0xF9:
-		case 0xFA:
-		case 0xFB:
-			// UTF-8の5バイト文字
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
-			{
-				s += 5;
-				continue;
-			}
-			// それ以外ならば単体の文字として扱う
-			s++;
-			continue;
-
-		case 0xFC:
-		case 0xFD:
-			// UTF-8の6バイト文字
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
-			{
-				s += 6;
-				continue;
-			}
-			// それ以外ならば単体の文字として扱う
-			s++;
-			continue;
-
 		default:
 			// それ以外ならば単体の文字として扱う
 			s++;
@@ -1254,8 +1218,7 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 
 	while (u8wordlength < nLen)
 	{
-		u8charlength = Utf8CharLength(s);
-		CharUtf8toUtf32(s, &u32chr);
+		u8charlength = CharUtf8toUtf32(s, &u32chr);
 
 		//不明文字なら処理を中断する
 		if (u32chr == 0)
@@ -1278,8 +1241,8 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 		}
 		else
 		{
-			p[i++] = WORD((u32chr - 0x10000) / 0x400 + 0xD800);
-			p[i++] = WORD((u32chr - 0x10000) % 0x400 + 0xDC00);
+			p[i++] = WORD(((u32chr - 0x10000) >> 10) + 0xD800);
+			p[i++] = WORD(((u32chr - 0x10000) & 0x3FF) + 0xDC00);
 		}
 	}
 
@@ -1334,7 +1297,7 @@ void CharUtf32toUtf16(LPDWORD lpStringdw, LPWORD stringword)
 //   lpString			対象文字列
 //   stringword			変換後後文字
 //
-void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringdword)
+int CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringdword)
 {
 	LPCBYTE s = lpString;
 	LPDWORD p = stringdword;
@@ -1343,32 +1306,198 @@ void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringdword)
 
 	switch (charlength)
 	{
-		case 1:
-			*p = *s;
+	case 1:
+		switch (*s)
+		{
+		case 0x80:
+			// #EURO SIGN
+			*p = 0x20AC;
 			break;
 
-		case 2:
+		case 0x82:
+			// #SINGLE LOW-9 QUOTATION MARK
+			*p = 0x201A;
+			break;
+
+		case 0x83:
+			// #LATIN SMALL LETTER F WITH HOOK
+			*p = 0x0192;
+			break;
+
+		case 0x84:
+			// #DOUBLE LOW-9 QUOTATION MARK
+			*p = 0x201E;
+			break;
+
+		case 0x85:
+			// #HORIZONTAL ELLIPSIS
+			*p = 0x2026;
+			break;
+
+		case 0x86:
+			// #DAGGER
+			*p = 0x2020;
+			break;
+
+		case 0x87:
+			// #DOUBLE DAGGER
+			*p = 0x2021;
+			break;
+
+		case 0x88:
+			// #MODIFIER LETTER CIRCUMFLEX ACCENT
+			*p = 0x02C6;
+			break;
+
+		case 0x89:
+			// #PER MILLE SIGN
+			*p = 0x2030;
+			break;
+
+		case 0x8A:
+			// #LATIN CAPITAL LETTER S WITH CARON
+			*p = 0x0160;
+			break;
+
+		case 0x8B:
+			// #SINGLE LEFT-POINTING ANGLE QUOTATION MARK
+			*p = 0x2039;
+			break;
+
+		case 0x8C:
+			// #LATIN CAPITAL LIGATURE OE
+			*p = 0x0152;
+			break;
+
+		case 0x8E:
+			// #LATIN CAPITAL LETTER Z WITH CARON
+			*p = 0x017D;
+			break;
+
+		case 0x91:
+			// #LEFT SINGLE QUOTATION MARK
+			*p = 0x2018;
+			break;
+
+		case 0x92:
+			// #RIGHT SINGLE QUOTATION MARK
+			*p = 0x2019;
+			break;
+
+		case 0x93:
+			// #LEFT DOUBLE QUOTATION MARK
+			*p = 0x201C;
+			break;
+
+		case 0x94:
+			// #RIGHT DOUBLE QUOTATION MARK
+			*p = 0x201D;
+			break;
+
+		case 0x95:
+			// #BULLET
+			*p = 0x2022;
+			break;
+
+		case 0x96:
+			// #EN DASH
+			*p = 0x2013;
+			break;
+
+		case 0x97:
+			// #EM DASH
+			*p = 0x2014;
+			break;
+
+		case 0x98:
+			// #SMALL TILDE
+			*p = 0x02DC;
+			break;
+
+		case 0x99:
+			// #TRADE MARK SIGN
+			*p = 0x2122;
+			break;
+
+		case 0x9A:
+			// #LATIN SMALL LETTER S WITH CARON
+			*p = 0x0161;
+			break;
+
+		case 0x9B:
+			// #SINGLE RIGHT-POINTING ANGLE QUOTATION MARK
+			*p = 0x203A;
+			break;
+
+		case 0x9C:
+			// #LATIN SMALL LIGATURE OE
+			*p = 0x0153;
+			break;
+
+		case 0x9E:
+			// #LATIN SMALL LETTER Z WITH CARON
+			*p = 0x017E;
+			break;
+
+		case 0x9F:
+			// #LATIN CAPITAL LETTER Y WITH DIAERESIS
+			*p = 0x0178;
+			break;
+
+		default:
+			*p = *s;
+		}
+		return charlength;
+		break;
+
+	case 2:
+		// UTF-8の2バイト文字
+		if ((*(s+1) >= 0x80) && (*(s+1) <= 0xBF))
+		{
 			*p = (*s & 0x1F) << 6;
 			*p |= (*(s+1) & 0x3F);
+			return charlength;
 			break;
+		}
+		// 不明な文字は1バイト文字として処理する
+		*p = *s;
+		return 1;
+		break;
 
-		case 3:
+	case 3:
+		if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
+		{
 			*p = (*s & 0x0F) << 12;
 			*p |= (*(s+1) & 0x3F) << 6;
 			*p |= (*(s+2) & 0x3F);
+			return charlength;
 			break;
+		}
+		// 不明な文字は1バイト文字として処理する
+		*p = *s;
+		return 1;
+		break;
 
-		case 4:
+	case 4:
+		if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
+		{
 			*p = (*s & 0x07) << 18;
 			*p |= (*(s+1) & 0x3F) << 12;
 			*p |= (*(s+2) & 0x3F) << 6;
 			*p |= (*(s+3) & 0x3F);
+			return charlength;
 			break;
+		}
+		// 不明な文字は1バイト文字として処理する
+		*p = *s;
+		return 1;
+		break;
 
-		default:
-			//不明なら0を入れる
-			*p = 0;
-			break;
+	default:
+		//不明な文字は1バイト文字として処理する
+		*p = *s;
+		return 1;
+		break;
 	}
 }
 
@@ -1381,7 +1510,9 @@ void CharUtf8toUtf32(LPCBYTE lpString, LPDWORD stringdword)
 int Utf8CharLength(LPCBYTE utf8headbyte)
 {
 	//1バイトutf-8は0x00から0x7Fだが 0x80-0xC1も通すようにするかもしれない
-	if ((*utf8headbyte >= 0x00) && (*utf8headbyte <= 0x7F))
+	//暫定的にwindows-1952の0x80-0xBFも通すようにしてみる
+	//暫定的に0xC0-0xC1も通してみる
+	if ((*utf8headbyte >= 0x00) && (*utf8headbyte <= 0xC1))
 	{
 		return 1;
 	}
@@ -1396,14 +1527,6 @@ int Utf8CharLength(LPCBYTE utf8headbyte)
 	if ((*utf8headbyte >= 0xF0) && (*utf8headbyte <= 0xF7))
 	{
 		return 4;
-	}
-	if ((*utf8headbyte >= 0xF8) && (*utf8headbyte <= 0xFB))
-	{
-		return 5;
-	}
-	if ((*utf8headbyte >= 0xFC) && (*utf8headbyte <= 0xFD))
-	{
-		return 6;
 	}
 	return 0;
 }
@@ -1525,8 +1648,8 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 
 			case 0xB1: // ±(0xC2B1)
 				*p++ = *s++;
-				// 連数字の分離禁則処理
-				len = CalcNumberWordWrap(p, s);
+				// 連英数字の分離禁則処理
+				len = CalcAlphanumericWordWrap(p, s);
 				p += len;
 				s += len;
 				break;
@@ -1646,8 +1769,8 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 				case 0x8D: // －
 					*p++ = *s++;
 					*p++ = *s++;
-					// 連数字の分離禁則処理
-					len = CalcNumberWordWrap(p, s);
+					// 連英数字の分離禁則処理
+					len = CalcAlphanumericWordWrap(p, s);
 					p += len;
 					s += len;
 				break;
@@ -1664,8 +1787,8 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 				case 0x99: // ９
 					*p++ = *s++;
 					*p++ = *s++;
-					// 連数字の分離禁則処理
-					len = CalcNumberWordWrap(p, s);
+					// 連英数字の分離禁則処理
+					len = CalcAlphanumericWordWrap(p, s);
 					p += len;
 					s += len;
 				break;
@@ -1846,7 +1969,7 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 				break;
 
 			case 0xEF: // ｧ
-				if ((*(s + 1) == 0xBD) && (*(s + 1) == 0xA7))
+				if ((*(s + 1) == 0xBD) && (*(s + 2) == 0xA7))
 				{
 					// エスケープ記号の後にｧが続けば単体の文字として扱う
 					*p++ = *s++;
@@ -1892,9 +2015,62 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 		case '9':
 		case '-':
 		case '+':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+		case 0x27: // #APOSTROPHE
 			*p++ = *s++;
-			// 連数字の分離禁則処理
-			len = CalcNumberWordWrap(p, s);
+			// 連英数字の分離禁則処理
+			len = CalcAlphanumericWordWrap(p, s);
 			p += len;
 			s += len;
 			break;
@@ -1982,39 +2158,6 @@ int WINAPI CalcLineBreak(LPBYTE lpBuffer, LPCBYTE lpString)
 			// UTF-8の4バイト文字
 			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)))
 			{
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-				break;
-			}
-			// 不明な文字は1バイト文字として処理する
-			break;
-
-		case 0xF8:
-		case 0xF9:
-		case 0xFA:
-		case 0xFB:
-			*p++ = *s++;
-			// UTF-8の5バイト文字
-			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
-			{
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-				break;
-			}
-			// 不明な文字は1バイト文字として処理する
-			break;
-
-		case 0xFC:
-		case 0xFD:
-			*p++ = *s++;
-			// UTF-8の6バイト文字
-			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
-			{
-			*p++ = *s++;
-			*p++ = *s++;
 			*p++ = *s++;
 			*p++ = *s++;
 			*p++ = *s++;
@@ -2443,39 +2586,6 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 			// 不明な文字は1バイト文字として処理する
 			continue;
 
-		case 0xF8:
-		case 0xF9:
-		case 0xFA:
-		case 0xFB:
-			*p++ = *s++;
-			// UTF-8の5バイト文字
-			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)))
-			{
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-				continue;
-			}
-			// 不明な文字は1バイト文字として処理する
-			continue;
-
-		case 0xFC:
-		case 0xFD:
-			*p++ = *s++;
-			// UTF-8の6バイト文字
-			if (((*s >= 0x80) && (*s <= 0xBF)) && ((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
-			{
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-			*p++ = *s++;
-				continue;
-			}
-			// 不明な文字は1バイト文字として処理する
-			continue;
-
 		case 0x01:
 		case 0x02:
 		case 0x03:
@@ -2510,6 +2620,10 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 			// 制御文字があれば直前で区切る
 			break;
 
+		case 0x20:
+			// スペースがあれば直前で区切る
+			break;
+
 		default:
 			*p++ = *s++;
 			continue;
@@ -2528,7 +2642,7 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 }
 
 //
-// 連数字の分離禁則を計算する
+// 連英数字の分離禁則を計算する
 //
 // パラメータ
 //   lpBuffer		文字列処理バッファ
@@ -2536,7 +2650,7 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 // 戻り値
 //   処理したバイト数
 //
-int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
+int CalcAlphanumericWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 {
 	LPBYTE p = lpBuffer;
 	LPCBYTE s = lpString;
@@ -2562,6 +2676,59 @@ int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case '9':
 		case ',':
 		case '.':
+		case 'A':
+		case 'B':
+		case 'C':
+		case 'D':
+		case 'E':
+		case 'F':
+		case 'G':
+		case 'H':
+		case 'I':
+		case 'J':
+		case 'K':
+		case 'L':
+		case 'M':
+		case 'N':
+		case 'O':
+		case 'P':
+		case 'Q':
+		case 'R':
+		case 'S':
+		case 'T':
+		case 'U':
+		case 'V':
+		case 'W':
+		case 'X':
+		case 'Y':
+		case 'Z':
+		case 'a':
+		case 'b':
+		case 'c':
+		case 'd':
+		case 'e':
+		case 'f':
+		case 'g':
+		case 'h':
+		case 'i':
+		case 'j':
+		case 'k':
+		case 'l':
+		case 'm':
+		case 'n':
+		case 'o':
+		case 'p':
+		case 'q':
+		case 'r':
+		case 's':
+		case 't':
+		case 'u':
+		case 'v':
+		case 'w':
+		case 'x':
+		case 'y':
+		case 'z':
+		case 0x27: // #APOSTROPHE
 			// 数字または数字を構成する記号ならば続けて処理する
 			*p++ = *s++;
 			continue;
@@ -2634,7 +2801,7 @@ int CalcNumberWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 #if _INMM_LOG_OUTPUT
 #ifndef _INMM_PERF_LOG
 	*p = '\0';
-	fprintf(fpLog, "CalcNumberWordWrap: %s (%d) %s\n", (char *)lpBuffer, p - lpBuffer, (char *)lpString);
+	fprintf(fpLog, "CalcAlphanumericWordWrap: %s (%d) %s\n", (char *)lpBuffer, p - lpBuffer, (char *)lpString);
 #endif
 #endif
 
@@ -2705,38 +2872,6 @@ int WINAPI strnlen0(LPCBYTE lpString, int nMax)
 				}
 				s += 4;
 				len += 4;
-				continue;
-			}
-		}
-
-		// 5バイトUtf-8の1バイト目
-		if ((*s >= 0xF8) && (*s <= 0xFB))
-		{
-			// 5バイトUtf-8の2-5バイト目
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)))
-			{
-				if (len + 1 >= nMax)
-				{
-					break;
-				}
-				s += 5;
-				len += 5;
-				continue;
-			}
-		}
-
-		// 6バイトUtf-8の1バイト目
-		if ((*s >= 0xFC) && (*s <= 0xFD))
-		{
-			// 6バイトUtf-8の2-6バイト目
-			if (((*(s + 1) >= 0x80) && (*(s + 1) <= 0xBF)) && ((*(s + 2) >= 0x80) && (*(s + 2) <= 0xBF)) && ((*(s + 3) >= 0x80) && (*(s + 3) <= 0xBF)) && ((*(s + 4) >= 0x80) && (*(s + 4) <= 0xBF)) && ((*(s + 5) >= 0x80) && (*(s + 5) <= 0xBF)))
-			{
-				if (len + 1 >= nMax)
-				{
-					break;
-				}
-				s += 6;
-				len += 6;
 				continue;
 			}
 		}
