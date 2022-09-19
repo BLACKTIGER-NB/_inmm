@@ -218,7 +218,7 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 	}
 	HFONT hFontOld = (HFONT)SelectObject(hDesktopDC, fontTable[nMagicCode].hFont);
 
-	// 先頭のスペースは1文字を残して省略して計算する
+	// 先頭の連続したスペースは1文字を残して省略して計算する
 	if  (*s == 0x20)
 	{
 		nWidth += GetTextWidthWord(p, 1, nMagicCode);
@@ -638,9 +638,46 @@ int WINAPI GetTextWidth(LPCBYTE lpString, int nMagicCode, DWORD dwFlags)
 //
 int GetTextWidthWord(LPCBYTE lpString, int nLen, int nMagicCode)
 {
+	//文字列をUTF-8からUTF-16に変換する
+	LPCBYTE s = lpString;
+	DWORD u32chr;
+	WORD p[256];
+	int u8charlength = 0;
+	int u8wordlength = 0;
+	int i = 0;
+
+	while (u8wordlength < nLen)
+	{
+		u8charlength = CharUtf8toUtf32(s, &u32chr);
+		
+		//不明文字なら処理を中断する
+		if (u32chr == 0)
+		{
+			if (i != 0)
+			{
+				break;
+			}
+			else
+			{
+				return 0;
+			}
+		}
+
+		u8wordlength += u8charlength;
+		s += u8charlength;
+
+		if (u32chr < 0x10000) {
+			p[i++] = WORD(u32chr);
+		}
+		else
+		{
+			p[i++] = WORD(((u32chr - 0x10000) >> 10) + 0xD800);
+			p[i++] = WORD(((u32chr - 0x10000) & 0x3FF) + 0xDC00);
+		}
+	}
 
 	SIZE size;
-	GetTextExtentPoint32(hDesktopDC, (LPCSTR)lpString, nLen, &size);
+	GetTextExtentPoint32W(hDesktopDC, (LPCWSTR)p, i, &size);
 
 #if _INMM_LOG_OUTPUT
 #ifndef _INMM_PERF_LOG
@@ -895,7 +932,7 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 						TextOutWord(p, s - p, &pt, lpRect, hDC, nMagicCode, color, dwFlags);
 					}
 					colorOld = color;
-					color = RGB((*(s + 5) - '0') << 5, (*(s + 4) - '0') << 5, (*(s + 3) - '0') << 5);
+					color = RGB((*(s + 3) - '0') << 5, (*(s + 2) - '0') << 5, (*(s + 1) - '0') << 5);
 					s += 6;
 					p = s;
 					continue;
@@ -965,7 +1002,7 @@ void WINAPI TextOutDC2(LPRECT lpRect, int *px, int *py, LPCBYTE lpString, LPDIRE
 				continue;
 			}
 			// エスケープ記号の後に§が続けば単体の文字として扱う
-			if ((*(s + 1) == 0xC2) && (*(s + 2) == 0xA7))
+			if ((*(s + 1) == 0xA2) && (*(s + 2) == 0xA7))
 			{
 				// 出力する文字列があれば表示する
 				if (s > p)
@@ -1170,6 +1207,46 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 	int x = lpPoint->x + fontTable[nMagicCode].nAdjustX;
 	int y = lpPoint->y + fontTable[nMagicCode].nAdjustY;
 
+
+	//文字列をUTF-8からUTF-16に変換する
+	LPCBYTE s = lpString;
+	DWORD u32chr;
+	WORD p[256];
+	int u8charlength = 0;
+	int u8wordlength = 0;
+	int i = 0;
+
+	while (u8wordlength < nLen)
+	{
+		u8charlength = CharUtf8toUtf32(s, &u32chr);
+
+		//不明文字なら処理を中断する
+		if (u32chr == 0)
+		{
+			if (i != 0)
+			{
+				break;
+			}
+			else
+			{
+				return;
+			}
+		}
+
+		u8wordlength += u8charlength;
+		s += u8charlength;
+
+		if (u32chr < 0x10000) {
+			p[i++] = WORD(u32chr);
+		}
+		else
+		{
+			p[i++] = WORD(((u32chr - 0x10000) >> 10) + 0xD800);
+			p[i++] = WORD(((u32chr - 0x10000) & 0x3FF) + 0xDC00);
+		}
+	}
+
+
 	// 影を付ける場合は出力位置の右下に黒で出力する
 	bool bShadowed = ((dwFlags & 2) != 0);
 	if (bShadowed)
@@ -1177,11 +1254,11 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 		SetTextColor(hDC, RGB(0, 0, 0));
 		if (lpRect != NULL)
 		{
-			ExtTextOut(hDC, x + 1, y + 1, ETO_CLIPPED, lpRect, (LPCSTR)lpString, nLen, NULL);
+			ExtTextOutW(hDC, x + 1, y + 1, ETO_CLIPPED, lpRect, (LPCWSTR)p, i, NULL);
 		}
 		else
 		{
-			TextOut(hDC, x + 1, y + 1, (LPCSTR)lpString, nLen);
+			TextOutW(hDC, x + 1, y + 1, (LPCWSTR)p, i);
 		}
 	}
 
@@ -1189,16 +1266,16 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 	SetTextColor(hDC, color);
 	if (lpRect != NULL)
 	{
-		ExtTextOut(hDC, x, y, ETO_CLIPPED, lpRect, (LPCSTR)lpString, nLen, NULL);
+		ExtTextOutW(hDC, x, y, ETO_CLIPPED, lpRect, (LPCWSTR)p, i, NULL);
 	}
 	else
 	{
-		TextOut(hDC, x, y, (LPCSTR)lpString, nLen);
+		TextOutW(hDC, x, y, (LPCWSTR)p, i);
 	}
 	
 	// 出力位置を更新する
 	SIZE size;
-	GetTextExtentPoint32(hDC, (LPCSTR)lpString, nLen, &size);
+	GetTextExtentPoint32W(hDC, (LPCWSTR)p, i, &size);
 	lpPoint->x += size.cx;
 }
 
@@ -1212,7 +1289,6 @@ void TextOutWord(LPCBYTE lpString, int nLen, LPPOINT lpPoint, LPRECT lpRect, HDC
 //
 void CharUtf32toUtf16(LPDWORD lpStringdw, LPWORD stringword)
 {
-//中身無し
 }
 //
 // 文字をUTF-8からUTF32に変換する
@@ -2402,11 +2478,7 @@ int CalcColorWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 				{
 					break;
 				}
-				if (((*(s + 3) >= '0') && (*(s + 3) <= '9')) && ((*(s + 4) >= '0') && (*(s + 4) <= '9')) && ((*(s + 5) >= '0') && (*(s + 5) <= '9')))
-				{
-					break;
-				}
-				if ((*(s + 3) == 0xEF) && (*(s + 4) == 0xBD) && (*(s + 5) == 0xA7))
+				if ((*(s + 3) == 0xA7) && (*(s + 4) == 0xBD) && (*(s + 5) == 0xA7))
 				{
 					break;
 				}
@@ -2657,14 +2729,14 @@ int CalcAlphanumericWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 'y':
 		case 'z':
 		case 0x27: // #APOSTROPHE
-			// 英数字または英数字を構成する記号ならば続けて処理する
+			// 数字または数字を構成する記号ならば続けて処理する
 			*p++ = *s++;
 			continue;
 
 		case '%':
 			if ((*(s + 1) < '0') || (*(s + 1) > '9') || (*(s + 2) < '0') || (*(s + 2) > '9') || (*(s + 3) < '0') || (*(s + 3) > '9'))
 			{
-				// 英数字の後ろの%はまとめて処理する
+				// 数字の後ろの%はまとめて処理する
 				*p++ = *s;
 			}
 			break;
@@ -2672,7 +2744,7 @@ int CalcAlphanumericWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 		case 0x5C: // エスケープ記号 '\\'(shiftjis) or バックスラッシュ
 			if (*(s + 1) == '%')
 			{
-				// 英数字の後ろの%はまとめて処理する
+				// 数字の後ろの%はまとめて処理する
 				*p++ = *s++;
 				*p++ = *s;
 			}
@@ -2697,7 +2769,7 @@ int CalcAlphanumericWordWrap(LPBYTE lpBuffer, LPCBYTE lpString)
 				switch (*(s + 2))
 				{
 				case 0x85: // ％
-					// 英数字の後ろの%はまとめて処理する
+					// 数字の後ろの%はまとめて処理する
 					*p++ = *s++;
 					*p++ = *s++;
 					*p++ = *s;
